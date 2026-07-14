@@ -936,10 +936,18 @@ function drawCat(c,t,gCtx,forcePose){
 
   if(!gCtx){
     ctx.save();ctx.translate(c.x,c.y);
+    // имя породы над котиком
+    const nm=B.n;
+    ctx.font="900 11px Nunito";ctx.textAlign="center";ctx.textBaseline="middle";
+    const ny=-60*s;
+    ctx.lineJoin="round";ctx.lineWidth=3.4;ctx.strokeStyle="rgba(255,250,236,.92)";
+    ctx.strokeText(nm,0,ny);
+    ctx.fillStyle=c.sh?"#B9821B":INK;ctx.fillText(nm,0,ny);
+    // бейдж уровня
     const bw=c.sh?30:22;
     ctx.fillStyle=c.sh?"rgba(196,148,26,.9)":"rgba(74,63,58,.82)";
     rr(-bw/2,6,bw,13,6.5);ctx.fill();
-    ctx.fillStyle="#fff";ctx.font="900 9.5px Nunito";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillStyle="#fff";ctx.font="900 9.5px Nunito";
     ctx.fillText((c.sh?"★ ":"")+c.lvl,0,12.8);
     ctx.restore();
     if(c.sh&&Math.random()<0.02)
