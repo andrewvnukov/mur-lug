@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Мур-Луг — уютная ферма котиков</title>
+<title>Мур-Луг</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -128,12 +128,12 @@
   <div class="top">
     <div class="chip">
       <svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="12" fill="#F2B23C"/><circle cx="13" cy="13" r="9.2" fill="#FFD983"/><g fill="#DE962A"><ellipse cx="13" cy="15.6" rx="3.4" ry="2.7"/><circle cx="9.2" cy="11.4" r="1.5"/><circle cx="13" cy="10.2" r="1.5"/><circle cx="16.8" cy="11.4" r="1.5"/></g></svg>
-      <div class="col"><div class="v" id="coins">0</div><div class="l">МОНЕТКИ</div></div>
+      <div class="col"><div class="v" id="coins">0</div><div class="l" id="coinsLabel">МОНЕТКИ</div></div>
     </div>
     <div class="chip">
       <svg width="24" height="24" viewBox="0 0 24 24"><path d="M13 2 5 14h5l-1 8 8-12h-5l1-8z" fill="#7BCF9C"/></svg>
-      <div class="col"><div class="v" style="color:#4EA574">+<span id="ips">0</span>/с</div><div class="l">ДОХОД</div></div>
-      <span id="boostTag">x2</span>
+      <div class="col"><div class="v" style="color:#4EA574">+<span id="ips">0</span><span id="ipsUnit">/с</span></div><div class="l" id="incomeLabel">ДОХОД</div></div>
+      <span id="boostTag">×2</span>
     </div>
   </div>
 
@@ -155,18 +155,18 @@
 
   <div class="bottom">
     <button class="btn" id="buyBtn"><span id="buyTitle">Позвать котика</span><small id="buyCost">15</small></button>
-    <button class="btn" id="freeBtn"><span>Подарок</span><small><svg width="13" height="13" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/><path d="M10 9v6l6-3z" fill="#5E9FDE"/></svg>смотреть</small></button>
-    <button class="btn" id="boostBtn"><span>Буст x2</span><small><svg width="13" height="13" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/><path d="M10 9v6l6-3z" fill="#8F6FE0"/></svg>5 минут</small></button>
+    <button class="btn" id="freeBtn"><span id="freeTitle">Подарок</span><small><svg width="13" height="13" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/><path d="M10 9v6l6-3z" fill="#5E9FDE"/></svg><span id="freeSub">смотреть</span></small></button>
+    <button class="btn" id="boostBtn"><span id="boostTitle">Доход ×2</span><small><svg width="13" height="13" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/><path d="M10 9v6l6-3z" fill="#8F6FE0"/></svg><span id="boostSub">5 минут</span></small></button>
   </div>
 </div>
 
 <!-- панели -->
 <div class="sheet" id="questSheet">
-  <div class="head"><h3>Квесты дня</h3><button class="xbtn" data-close="questSheet">✕</button></div>
+  <div class="head"><h3 id="questTitle">Квесты дня</h3><button class="xbtn" data-close="questSheet">✕</button></div>
   <div class="body" id="questBody"></div>
 </div>
 <div class="sheet" id="shopSheet">
-  <div class="head"><h3>Магазин</h3><button class="xbtn" data-close="shopSheet">✕</button></div>
+  <div class="head"><h3 id="shopTitle">Магазин</h3><button class="xbtn" data-close="shopSheet">✕</button></div>
   <div class="tabs">
     <button class="tab on" id="tabDecor">Декор</button>
     <button class="tab" id="tabUps">Улучшения</button>
@@ -190,49 +190,137 @@
 
 /* ---------------- породы ---------------- */
 const BREEDS=[
- {n:"Молочко",  body:"#FBF3E6", belly:"#FFFFFF", accent:"#E3C4A6", iris:"#7FB86A", mark:"none",   acc:"none"},
- {n:"Персик",   body:"#F7C59F", belly:"#FCE8D5", accent:"#E0925C", iris:"#5F9E58", mark:"stripes",acc:"none"},
- {n:"Ириска",   body:"#D9A066", belly:"#F2D3AC", accent:"#B0763F", iris:"#E8A13C", mark:"stripes",acc:"flower"},
- {n:"Дымок",    body:"#B9C3CE", belly:"#E4EAF0", accent:"#7E8B99", iris:"#E8A13C", mark:"mask",   acc:"bow"},
- {n:"Мятка",    body:"#BFE3C8", belly:"#E7F6EB", accent:"#7FB88F", iris:"#4E8FCB", mark:"spot",   acc:"leaf"},
- {n:"Лаванда",  body:"#CBBCEB", belly:"#EAE3F9", accent:"#9A82D0", iris:"#E8A13C", mark:"patch",  acc:"scarf"},
- {n:"Ночка",    body:"#5C5560", belly:"#8C8492", accent:"#3F3944", iris:"#F2C34A", mark:"socks",  acc:"moon"},
- {n:"Румянка",  body:"#F5B3C0", belly:"#FBDEE5", accent:"#DE7F94", iris:"#4E8FCB", mark:"heart",  acc:"glasses"},
- {n:"Океаник",  body:"#9FC9E8", belly:"#D6EAF7", accent:"#6398C2", iris:"#3E6FA8", mark:"stripes",acc:"sailor"},
- {n:"Медовик",  body:"#F2C063", belly:"#FBE3AF", accent:"#CE9227", iris:"#7FB86A", mark:"stripes",acc:"crown"},
- {n:"Уголёк",   body:"#7A6F6A", belly:"#A79C96", accent:"#544D49", iris:"#7FB86A", mark:"socks",  acc:"star"},
- {n:"Небушко",  body:"#DCE9F7", belly:"#FFFFFF", accent:"#A9C4E0", iris:"#4E8FCB", mark:"patch",  acc:"halo"},
- {n:"Закатик",  body:"#F49E7C", belly:"#FBD2C0", accent:"#D46E48", iris:"#E8A13C", mark:"stripes",acc:"cape"},
- {n:"Изумруд",  body:"#8FCBB0", belly:"#CBEADC", accent:"#59A181", iris:"#E8A13C", mark:"spot",   acc:"gem"},
- {n:"Мур-Кинг", body:"#F6D488", belly:"#FCEFCF", accent:"#D5A63F", iris:"#B5722F", mark:"mask",   acc:"kingcrown"},
- {n:"Смородинка",body:"#6B5B95", belly:"#C9BFE8", accent:"#4A3D6B", iris:"#7FB86A", mark:"spot",   acc:"leaf"},
- {n:"Карамелька",body:"#C98A4B", belly:"#F0D4A8", accent:"#8C5A2E", iris:"#4E8FCB", mark:"stripes",acc:"bow"},
- {n:"Бирюза",   body:"#5FBFB3", belly:"#C9EEE8", accent:"#3D8B80", iris:"#E8A13C", mark:"mask",   acc:"scarf"},
- {n:"Малинка",  body:"#D65C7A", belly:"#F5C9D3", accent:"#A83E58", iris:"#4E8FCB", mark:"heart",  acc:"bow"},
- {n:"Шафран",   body:"#E8A23C", belly:"#F9DFA8", accent:"#B87A1E", iris:"#7FB86A", mark:"stripes",acc:"sailor"},
- {n:"Полуночник",body:"#34395C", belly:"#6B7291", accent:"#21243D", iris:"#F2C34A", mark:"socks",  acc:"moon"},
- {n:"Сапфир",   body:"#3E6FA8", belly:"#A9C9E8", accent:"#294D78", iris:"#E8A13C", mark:"patch",  acc:"gem"},
- {n:"Пломбир",  body:"#F7F2E4", belly:"#FFFFFF", accent:"#D8CBA8", iris:"#4E8FCB", mark:"spot",   acc:"bow"},
- {n:"Гранат",   body:"#A83E4A", belly:"#E8B3BC", accent:"#7A2833", iris:"#7FB86A", mark:"stripes",acc:"crown"},
- {n:"Опал",     body:"#C9D8EC", belly:"#FFFFFF", accent:"#9AAEC9", iris:"#E8A13C", mark:"patch",  acc:"halo"},
- {n:"Феникс",   body:"#E8622E", belly:"#F9C97A", accent:"#B03D18", iris:"#F2C34A", mark:"stripes",acc:"cape"},
- {n:"Звёздочёт",body:"#4B3F72", belly:"#9E8FC9", accent:"#332B52", iris:"#F2C34A", mark:"mask",   acc:"star"},
- {n:"Империал", body:"#6B3F8C", belly:"#F2D98C", accent:"#4A2A63", iris:"#7FB86A", mark:"patch",  acc:"crown"},
- {n:"Аврора",   body:"#E4F0F7", belly:"#FFFFFF", accent:"#A9C9DE", iris:"#4E8FCB", mark:"socks",  acc:"halo"},
- {n:"Мур-Император",body:"#F0C24A", belly:"#FCEFCF", accent:"#C9932A", iris:"#B5722F", mark:"mask", acc:"kingcrown"},
+ {n:"Молочко",  en:"Milky",       body:"#FBF3E6", belly:"#FFFFFF", accent:"#E3C4A6", iris:"#7FB86A", mark:"none",   acc:"none"},
+ {n:"Персик",   en:"Peaches",     body:"#F7C59F", belly:"#FCE8D5", accent:"#E0925C", iris:"#5F9E58", mark:"stripes",acc:"none"},
+ {n:"Ириска",   en:"Toffee",      body:"#D9A066", belly:"#F2D3AC", accent:"#B0763F", iris:"#E8A13C", mark:"stripes",acc:"flower"},
+ {n:"Дымок",    en:"Smokey",      body:"#B9C3CE", belly:"#E4EAF0", accent:"#7E8B99", iris:"#E8A13C", mark:"mask",   acc:"bow"},
+ {n:"Мятка",    en:"Minty",       body:"#BFE3C8", belly:"#E7F6EB", accent:"#7FB88F", iris:"#4E8FCB", mark:"spot",   acc:"leaf"},
+ {n:"Лаванда",  en:"Lavender",    body:"#CBBCEB", belly:"#EAE3F9", accent:"#9A82D0", iris:"#E8A13C", mark:"patch",  acc:"scarf"},
+ {n:"Ночка",    en:"Midnight",    body:"#5C5560", belly:"#8C8492", accent:"#3F3944", iris:"#F2C34A", mark:"socks",  acc:"moon"},
+ {n:"Румянка",  en:"Blush",       body:"#F5B3C0", belly:"#FBDEE5", accent:"#DE7F94", iris:"#4E8FCB", mark:"heart",  acc:"glasses"},
+ {n:"Океаник",  en:"Oceana",      body:"#9FC9E8", belly:"#D6EAF7", accent:"#6398C2", iris:"#3E6FA8", mark:"stripes",acc:"sailor"},
+ {n:"Медовик",  en:"Honey",       body:"#F2C063", belly:"#FBE3AF", accent:"#CE9227", iris:"#7FB86A", mark:"stripes",acc:"crown"},
+ {n:"Уголёк",   en:"Charcoal",    body:"#7A6F6A", belly:"#A79C96", accent:"#544D49", iris:"#7FB86A", mark:"socks",  acc:"star"},
+ {n:"Небушко",  en:"Skye",        body:"#DCE9F7", belly:"#FFFFFF", accent:"#A9C4E0", iris:"#4E8FCB", mark:"patch",  acc:"halo"},
+ {n:"Закатик",  en:"Sunset",      body:"#F49E7C", belly:"#FBD2C0", accent:"#D46E48", iris:"#E8A13C", mark:"stripes",acc:"cape"},
+ {n:"Изумруд",  en:"Emerald",     body:"#8FCBB0", belly:"#CBEADC", accent:"#59A181", iris:"#E8A13C", mark:"spot",   acc:"gem"},
+ {n:"Мур-Кинг", en:"Purr-King",   body:"#F6D488", belly:"#FCEFCF", accent:"#D5A63F", iris:"#B5722F", mark:"mask",   acc:"kingcrown"},
+ {n:"Смородинка",en:"Berry",      body:"#6B5B95", belly:"#C9BFE8", accent:"#4A3D6B", iris:"#7FB86A", mark:"spot",   acc:"leaf"},
+ {n:"Карамелька",en:"Caramel",    body:"#C98A4B", belly:"#F0D4A8", accent:"#8C5A2E", iris:"#4E8FCB", mark:"stripes",acc:"bow"},
+ {n:"Бирюза",   en:"Teal",        body:"#5FBFB3", belly:"#C9EEE8", accent:"#3D8B80", iris:"#E8A13C", mark:"mask",   acc:"scarf"},
+ {n:"Малинка",  en:"Raspberry",   body:"#D65C7A", belly:"#F5C9D3", accent:"#A83E58", iris:"#4E8FCB", mark:"heart",  acc:"bow"},
+ {n:"Шафран",   en:"Saffron",     body:"#E8A23C", belly:"#F9DFA8", accent:"#B87A1E", iris:"#7FB86A", mark:"stripes",acc:"sailor"},
+ {n:"Полуночник",en:"Nocturne",   body:"#34395C", belly:"#6B7291", accent:"#21243D", iris:"#F2C34A", mark:"socks",  acc:"moon"},
+ {n:"Сапфир",   en:"Sapphire",    body:"#3E6FA8", belly:"#A9C9E8", accent:"#294D78", iris:"#E8A13C", mark:"patch",  acc:"gem"},
+ {n:"Пломбир",  en:"Vanilla",     body:"#F7F2E4", belly:"#FFFFFF", accent:"#D8CBA8", iris:"#4E8FCB", mark:"spot",   acc:"bow"},
+ {n:"Гранат",   en:"Garnet",      body:"#A83E4A", belly:"#E8B3BC", accent:"#7A2833", iris:"#7FB86A", mark:"stripes",acc:"crown"},
+ {n:"Опал",     en:"Opal",        body:"#C9D8EC", belly:"#FFFFFF", accent:"#9AAEC9", iris:"#E8A13C", mark:"patch",  acc:"halo"},
+ {n:"Феникс",   en:"Phoenix",     body:"#E8622E", belly:"#F9C97A", accent:"#B03D18", iris:"#F2C34A", mark:"stripes",acc:"cape"},
+ {n:"Звёздочёт",en:"Stargazer",   body:"#4B3F72", belly:"#9E8FC9", accent:"#332B52", iris:"#F2C34A", mark:"mask",   acc:"star"},
+ {n:"Империал", en:"Imperial",    body:"#6B3F8C", belly:"#F2D98C", accent:"#4A2A63", iris:"#7FB86A", mark:"patch",  acc:"crown"},
+ {n:"Аврора",   en:"Aurora",      body:"#E4F0F7", belly:"#FFFFFF", accent:"#A9C9DE", iris:"#4E8FCB", mark:"socks",  acc:"halo"},
+ {n:"Мур-Император",en:"Purr-Emperor",body:"#F0C24A", belly:"#FCEFCF", accent:"#C9932A", iris:"#B5722F", mark:"mask", acc:"kingcrown"},
 ];
 const MAXLVL=BREEDS.length;
 
 /* ---------------- декор ---------------- */
 const DECOR=[
- {id:"ball",   n:"Клубочек",  d:"Котики играют с ним и радуются",        cost:400,    kind:"toy",  cap:1},
- {id:"bed",    n:"Лежанка",   d:"Самое уютное место для сна",            cost:2500,   kind:"bed",  cap:1},
- {id:"flow",   n:"Клумба",    d:"Приманивает бабочек, красота",          cost:9000,   kind:"deco", cap:0},
- {id:"pond",   n:"Прудик",    d:"Котики смотрят на рыбок и ловят их",    cost:30000,  kind:"pond", cap:2},
- {id:"house",  n:"Домик",     d:"Котик спит внутри, торчат только ушки", cost:90000,  kind:"house",cap:1},
- {id:"lant",   n:"Фонарик",   d:"Тёплый вечерний свет на лугу",          cost:250000, kind:"deco", cap:0},
+ {id:"ball",   n:"Клубочек",  d:"Котики играют с ним и радуются",        en:"Yarn Ball", ed:"Cats play with it and cheer up",       cost:400,    kind:"toy",  cap:1},
+ {id:"bed",    n:"Лежанка",   d:"Самое уютное место для сна",            en:"Cozy Bed",  ed:"The comfiest place for a nap",         cost:2500,   kind:"bed",  cap:1},
+ {id:"flow",   n:"Клумба",    d:"Приманивает бабочек, красота",          en:"Flowerbed", ed:"Attracts butterflies, so pretty",      cost:9000,   kind:"deco", cap:0},
+ {id:"pond",   n:"Прудик",    d:"Котики смотрят на рыбок и ловят их",    en:"Pond",      ed:"Cats watch the fish and catch them",   cost:30000,  kind:"pond", cap:2},
+ {id:"house",  n:"Домик",     d:"Котик спит внутри, торчат только ушки", en:"Cat House", ed:"A cat sleeps inside, ears poke out",   cost:90000,  kind:"house",cap:1},
+ {id:"lant",   n:"Фонарик",   d:"Тёплый вечерний свет на лугу",          en:"Lantern",   ed:"Warm evening light on the meadow",     cost:250000, kind:"deco", cap:0},
 ];
 const decorDef=id=>DECOR.find(d=>d.id===id);
+
+/* ---------------- локализация (RU / EN) ---------------- */
+let lang="ru";
+function detectLang(){
+  try{ if(ysdk&&ysdk.environment&&ysdk.environment.i18n&&ysdk.environment.i18n.lang)
+    return ysdk.environment.i18n.lang==="ru"?"ru":"en"; }catch(e){}
+  return (navigator.language||"en").toLowerCase().startsWith("ru")?"ru":"en";
+}
+const catName=l=>{const b=BREEDS[l-1];return lang==="en"&&b.en?b.en:b.n};
+const decName=d=>lang==="en"&&d.en?d.en:d.n;
+const decDesc=d=>lang==="en"&&d.ed?d.ed:d.d;
+const TX={
+  coinsLabel:{ru:"МОНЕТКИ",en:"COINS"},
+  incomeLabel:{ru:"ДОХОД",en:"INCOME"},
+  perSec:{ru:"/с",en:"/s"},
+  questsTitle:{ru:"Квесты дня",en:"Daily Quests"},
+  shopTitle:{ru:"Магазин",en:"Shop"},
+  albumTitle:{ru:"Альбом котиков",en:"Cat Album"},
+  tabDecor:{ru:"Декор",en:"Decor"},
+  tabUps:{ru:"Улучшения",en:"Upgrades"},
+  fabQuests:{ru:"Квесты",en:"Quests"},
+  fabShop:{ru:"Магазин",en:"Shop"},
+  fabAlbum:{ru:"Альбом",en:"Album"},
+  buyCat:{ru:"Позвать котика",en:"Call a cat"},
+  buyName:{ru:n=>"Позвать: "+n,en:n=>"Call: "+n},
+  gift:{ru:"Подарок",en:"Gift"},
+  watch:{ru:"смотреть",en:"watch"},
+  boostBtn:{ru:"Доход ×2",en:"Income ×2"},
+  boostMin:{ru:"5 минут",en:"5 min"},
+  notEnough:{ru:"Не хватает монеток",en:"Not enough coins"},
+  owned:{ru:"Куплено",en:"Owned"},
+  lvlWord:{ru:"ур.",en:"lvl"},
+  shinyFound:{ru:"★ сияющий найден",en:"★ shiny found"},
+  decorPlaced:{ru:n=>n+" на лугу! Перетащи, куда нравится",en:n=>n+" placed! Drag it where you like"},
+  upLeveled:{ru:(n,l)=>n+" — уровень "+l+"!",en:(n,l)=>n+" — level "+l+"!"},
+  questDone:{ru:"Квест выполнен!",en:"Quest complete!"},
+  claimed:{ru:"Готово",en:"Done"},
+  chestDay:{ru:"Сундук дня",en:"Daily Chest"},
+  chestDesc:{ru:"Выполни все квесты — получи большой приз",en:"Complete all quests for a big prize"},
+  chestOpen:{ru:"Открыть",en:"Open"},
+  chestOpened:{ru:"Открыт",en:"Opened"},
+  chestToast:{ru:(g,b)=>"Сундук: +"+g+" монеток"+b,en:(g,b)=>"Chest: +"+g+" coins"+b},
+  chestBonusCat:{ru:" и новый котик!",en:" and a new cat!"},
+  releaseLabel:{ru:"Отпустить",en:"Release"},
+  releaseToast:{ru:(n,g)=>n+" отправился гулять: +"+g,en:(n,g)=>n+" wandered off: +"+g},
+  shinyToast:{ru:"Редкий сияющий котик! Доход x3",en:"Rare shiny cat! Income x3"},
+  noSpace:{ru:"На лугу нет места — слей одинаковых котиков",en:"No room — merge matching cats"},
+  freeNoSpace:{ru:"Сначала освободи место на лугу",en:"Free up space on the meadow first"},
+  adFail:{ru:"Реклама не загрузилась, попробуй позже",en:"Ad failed to load, try later"},
+  catComing:{ru:n=>n+" спешит к тебе!",en:n=>n+" is on the way!"},
+  boostOn:{ru:"Доход x2 на 5 минут!",en:"Income x2 for 5 minutes!"},
+  coinsWord:{ru:"монеток",en:"coins"},
+  discShiny:{ru:"Сияющий котик",en:"Shiny cat"},
+  discNew:{ru:"Новый котик",en:"New cat"},
+  discLevel:{ru:(l,i)=>"Уровень "+l+" · +"+i+"/с",en:(l,i)=>"Level "+l+" · +"+i+"/s"},
+  discReward:{ru:r=>"Награда за открытие: <b>+"+r+"</b> монеток",en:r=>"Discovery reward: <b>+"+r+"</b> coins"},
+  discBtn:{ru:"Мур!",en:"Meow!"},
+  offTitle:{ru:"Пока тебя не было…",en:"While you were away…"},
+  offBody:{ru:g=>"Котики намурлыкали <b>"+g+"</b> монеток",en:g=>"Your cats purred up <b>"+g+"</b> coins"},
+  claim:{ru:"Забрать",en:"Claim"},
+  dailyTitle:{ru:"Ежедневный подарок",en:"Daily Gift"},
+  dailyBody:{ru:(d,g)=>"День "+d+" подряд — <b>"+g+"</b> монеток",en:(d,g)=>"Day "+d+" in a row — <b>"+g+"</b> coins"},
+  tutTitle:{ru:"Добро пожаловать на луг!",en:"Welcome to the meadow!"},
+  tutBody:{ru:`🐾 <b>Тащи</b> котика на такого же — они <b>сольются</b> в нового<br>
+      ✋ <b>Гладь</b> котиков — они дают монетки<br>
+      🏡 В <b>магазине</b> купи домик и прудик — котики будут в них играть<br>
+      📜 Выполняй <b>квесты</b> и открывай сундук<br>
+      🚪 Тесно на лугу? Тащи котика на табличку <b>«Отпустить»</b> — он уйдёт и оставит монетки`,
+    en:`🐾 <b>Drag</b> a cat onto a matching one — they <b>merge</b> into a new cat<br>
+      ✋ <b>Pet</b> cats — they give you coins<br>
+      🏡 In the <b>shop</b> buy a house and a pond — cats will play with them<br>
+      📜 Complete <b>quests</b> and open the chest<br>
+      🚪 Meadow crowded? Drag a cat onto the <b>Release</b> sign — it leaves and drops coins`},
+  tutBtn:{ru:"Мур, понятно!",en:"Got it, meow!"},
+  qMerge:{ru:g=>"Слей котиков: "+g,en:g=>"Merge cats: "+g},
+  qPet:{ru:g=>"Погладь котиков: "+g,en:g=>"Pet cats: "+g},
+  qBuy:{ru:g=>"Позови котиков: "+g,en:g=>"Call cats: "+g},
+  qChat:{ru:g=>"Подружи котиков: "+g,en:g=>"Make cats friends: "+g},
+  qEarn:{ru:g=>"Заработай "+g+" монеток",en:g=>"Earn "+g+" coins"},
+  upIncN:{ru:"Мурчальная сила",en:"Purr Power"},
+  upIncD:{ru:l=>`Доход всех котиков +15% за уровень (сейчас +${Math.round(l*15)}%)`,en:l=>`All cats' income +15% per level (now +${Math.round(l*15)}%)`},
+  upOffN:{ru:"Сонные накопления",en:"Sleepy Savings"},
+  upOffD:{ru:l=>`Офлайн-доход +25% за уровень (сейчас +${Math.round(l*25)}%)`,en:l=>`Offline income +25% per level (now +${Math.round(l*25)}%)`},
+  upShN:{ru:"Звёздная пыльца",en:"Stardust"},
+  upShD:{ru:l=>`Шанс сияющего котика при слиянии: ${(shinyChance()*100).toFixed(1)}%`,en:l=>`Shiny cat chance on merge: ${(shinyChance()*100).toFixed(1)}%`},
+  title:{ru:"Мур-Луг",en:"Purr Meadow"},
+};
+function T(k,...a){const e=TX[k];if(!e)return k;let v=e[lang]!=null?e[lang]:e.ru;return typeof v==="function"?v(...a):v;}
 
 /* ---------------- баланс ---------------- */
 const inc=l=>Math.ceil(Math.pow(2.05,l-1));
@@ -258,9 +346,9 @@ const incMult=()=>1+.15*upLvl("inc");
 const offRate=()=>OFFLINE_RATE*(1+.25*upLvl("off"));
 const shinyChance=()=>1-Math.pow(.94,1+.12*upLvl("shiny"));
 const UPS=[
- {id:"inc",  n:"Мурчальная сила",   d:l=>`Доход всех котиков +15% за уровень (сейчас +${Math.round(l*15)}%)`, base:300, k:2.1},
- {id:"off",  n:"Сонные накопления", d:l=>`Офлайн-доход +25% за уровень (сейчас +${Math.round(l*25)}%)`,       base:500, k:2.3},
- {id:"shiny",n:"Звёздная пыльца",   d:l=>`Шанс сияющего котика при слиянии: ${(shinyChance()*100).toFixed(1)}%`, base:800, k:2.6},
+ {id:"inc",  nk:"upIncN", dk:"upIncD", base:300, k:2.1},
+ {id:"off",  nk:"upOffN", dk:"upOffD", base:500, k:2.3},
+ {id:"shiny",nk:"upShN",  dk:"upShD",  base:800, k:2.6},
 ];
 const upCost=u=>Math.ceil(u.base*Math.pow(u.k,upLvl(u.id)));
 
@@ -298,7 +386,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
 function fmt(n){
   if(n<1000)return Math.floor(n)+"";
-  const u=["К","М","Б","Т","Кв"];let i=-1;
+  const u=lang==="en"?["K","M","B","T","Qa"]:["К","М","Б","Т","Кв"];let i=-1;
   while(n>=1000&&i<u.length-1){n/=1000;i++}
   return(n>=100?Math.floor(n):+n.toFixed(1))+u[i];
 }
@@ -320,6 +408,10 @@ function chime(){tone(660,.07,.25);setTimeout(()=>tone(880,.07,.3),90);setTimeou
 
 /* ---------------- canvas ---------------- */
 const cv=$("cv");let ctx=cv.getContext("2d");
+/* десктоп: не выделять поле и не открывать контекстное меню (треб. платформы 1.6.2.7) */
+addEventListener("contextmenu",e=>e.preventDefault());
+document.addEventListener("selectstart",e=>e.preventDefault());
+document.addEventListener("dragstart",e=>e.preventDefault());
 let W=0,H=0,DPR=1,horizon=0,fieldTop=0,fieldBot=0;
 /* косметический сдвиг камеры при зажатии на пустом поле */
 let camX=0,camY=0,camTX=0,camTY=0;
@@ -937,7 +1029,7 @@ function drawCat(c,t,gCtx,forcePose){
   if(!gCtx){
     ctx.save();ctx.translate(c.x,c.y);
     // имя породы над котиком
-    const nm=B.n;
+    const nm=catName(c.lvl);
     ctx.font="900 11px Nunito";ctx.textAlign="center";ctx.textBaseline="middle";
     const ny=-60*s;
     ctx.lineJoin="round";ctx.lineWidth=3.4;ctx.strokeStyle="rgba(255,250,236,.92)";
@@ -1461,7 +1553,7 @@ function drawReleaseZone(){
   ctx.beginPath();ctx.moveTo(z.x+16,z.y+29);ctx.lineTo(z.x+16,z.y+17);
   ctx.quadraticCurveTo(z.x+23,z.y+7,z.x+30,z.y+17);ctx.lineTo(z.x+30,z.y+29);ctx.closePath();ctx.fill();
   ctx.fillStyle=INK;ctx.font="900 12.5px Nunito";ctx.textAlign="left";ctx.textBaseline="middle";
-  ctx.fillText("Отпустить",z.x+40,z.y+z.h/2+1);
+  ctx.fillText(T("releaseLabel"),z.x+40,z.y+z.h/2+1);
   ctx.restore();
 }
 function releaseCat(c){
@@ -1473,7 +1565,7 @@ function releaseCat(c){
   heartsAt(c.x,c.y-30,4);
   burst(c.x,c.y-20,[BREEDS[c.lvl-1].body,"#FFD983","#fff"],12,140);
   pop(380,.07);
-  toast(BREEDS[c.lvl-1].n+" отправился гулять: +"+fmt(gld));
+  toast(T("releaseToast",catName(c.lvl),fmt(gld)));
   refreshHud();persist(true);
 }
 function petCat(c,x,y){
@@ -1497,7 +1589,7 @@ function doMerge(a,b){
   ringAt(nc.x,nc.y-20,B.accent);
   burst(nc.x,nc.y-24,[B.body,B.belly,"#FFD983","#FFC2CF","#fff"],18,190);
   if(sh){burst(nc.x,nc.y-30,["#FFE06E","#FFF3C2","#fff"],14,150);chime();
-    toast("Редкий сияющий котик! Доход x3")}
+    toast(T("shinyToast"))}
   albumRecord(lvl,sh);
   qProg("merge",1);
   if(lvl>S.best){S.best=lvl;discover(lvl,sh)}
@@ -1530,18 +1622,18 @@ function renderAlbum(){
     const a=S.album[l];
     if(a&&a.d){
       html+=`<div class="cell"><img src="${portraitOf(l,a.sh)}" alt="">
-        <div class="nm">${BREEDS[l-1].n}</div><div class="lv">ур. ${l} · +${fmt(inc(l))}/с</div>
-        ${a.sh?'<div class="shinyTag">★ сияющий найден</div>':""}</div>`;
+        <div class="nm">${catName(l)}</div><div class="lv">${T("lvlWord")} ${l} · +${fmt(inc(l))}${T("perSec")}</div>
+        ${a.sh?`<div class="shinyTag">${T("shinyFound")}</div>`:""}</div>`;
     }else{
       html+=`<div class="cell unk"><div class="q">?</div>
-        <div class="nm">???</div><div class="lv">ур. ${l}</div></div>`;
+        <div class="nm">???</div><div class="lv">${T("lvlWord")} ${l}</div></div>`;
     }
   }
   $("albumBody").innerHTML=html;
   const found=Object.values(S.album).filter(a=>a.d).length;
   $("albumBadge").style.display="none";
   const h3=$("albumSheet").querySelector("h3");
-  if(h3)h3.textContent=`Альбом котиков · ${found}/${MAXLVL}`;
+  if(h3)h3.textContent=`${T("albumTitle")} · ${found}/${MAXLVL}`;
 }
 
 /* ---------------- магазин декора и улучшений ---------------- */
@@ -1553,7 +1645,7 @@ function renderUps(){
   for(const u of UPS){
     const l=upLvl(u.id),cost=upCost(u);
     html+=`<div class="srow"><div class="ulvl">${l}</div>
-      <div class="si"><div class="sn">${u.n}</div><div class="sd">${u.d(l)}</div></div>
+      <div class="si"><div class="sn">${T(u.nk)}</div><div class="sd">${T(u.dk,l)}</div></div>
       <button class="sbtn" data-up="${u.id}" ${S.coins<cost?"disabled":""}>${fmt(cost)}</button></div>`;
   }
   $("shopBody").innerHTML=html;
@@ -1563,9 +1655,9 @@ function renderUps(){
 }
 function buyUp(id){
   const u=UPS.find(x=>x.id===id),cost=upCost(u);
-  if(S.coins<cost){toast("Не хватает монеток");return}
+  if(S.coins<cost){toast(T("notEnough"));return}
   S.coins-=cost;S.up[id]=upLvl(id)+1;
-  chime();toast(u.n+" — уровень "+S.up[id]+"!");
+  chime();toast(T("upLeveled",T(u.nk),S.up[id]));
   refreshHud();renderShop();persist(true);
 }
 function renderShop(){
@@ -1577,9 +1669,9 @@ function renderShop(){
     const owned=decor.some(d=>d.id===def.id);
     html+=`<div class="srow">
       <canvas data-dic="${def.id}" width="104" height="104"></canvas>
-      <div class="si"><div class="sn">${def.n}</div><div class="sd">${def.d}</div></div>
+      <div class="si"><div class="sn">${decName(def)}</div><div class="sd">${decDesc(def)}</div></div>
       <button class="sbtn" data-buy="${def.id}" ${owned||S.coins<def.cost?"disabled":""}>
-        ${owned?"Куплено":fmt(def.cost)}</button></div>`;
+        ${owned?T("owned"):fmt(def.cost)}</button></div>`;
   }
   $("shopBody").innerHTML=html;
   // мини-превью (переиспользуем drawDecorItem через подмену ctx)
@@ -1604,22 +1696,22 @@ function ctxSwap(g){const old=ctx;ctx=g;return old}
 function buyDecor(id){
   const def=decorDef(id);
   if(decor.some(d=>d.id===id))return;
-  if(S.coins<def.cost){toast("Не хватает монеток");return}
+  if(S.coins<def.cost){toast(T("notEnough"));return}
   S.coins-=def.cost;
   const inst={id,x:R(W*.2,W*.7),y:R(fieldTop+40,fieldBot-16),occ:0};
   decor.push(inst);
   chime();burst(inst.x,inst.y-16,["#FFD983","#fff","#BFE3C8"],14,150);
-  toast(def.n+" на лугу! Перетащи, куда нравится");
+  toast(T("decorPlaced",decName(def)));
   refreshHud();renderShop();persist(true);
 }
 
 /* ---------------- квесты ---------------- */
 const QPOOL=[
- {t:"merge",txt:g=>`Слей котиков: ${g}`,goal:()=>3},
- {t:"pet",  txt:g=>`Погладь котиков: ${g}`,goal:()=>15},
- {t:"buy",  txt:g=>`Позови котиков: ${g}`,goal:()=>3},
- {t:"chat", txt:g=>`Подружи котиков: ${g}`,goal:()=>2},
- {t:"earn", txt:g=>`Заработай ${fmt(g)} монеток`,goal:()=>Math.max(600,Math.floor(totalIps()*420))},
+ {t:"merge",tk:"qMerge",goal:()=>3},
+ {t:"pet",  tk:"qPet",  goal:()=>15},
+ {t:"buy",  tk:"qBuy",  goal:()=>3},
+ {t:"chat", tk:"qChat", goal:()=>2},
+ {t:"earn", tk:"qEarn", goal:()=>Math.max(600,Math.floor(totalIps()*420))},
 ];
 function ensureQuests(){
   const today=new Date().toDateString();
@@ -1633,7 +1725,7 @@ function ensureQuests(){
     S.quests.list.push({t:q.t,goal,prog:0,done:false,claimed:false});
   }
 }
-function qtxt(q){const d=QPOOL.find(p=>p.t===q.t);return d.txt(q.goal)}
+function qtxt(q){const d=QPOOL.find(p=>p.t===q.t);return T(d.tk,q.t==="earn"?fmt(q.goal):q.goal)}
 function qReward(){return Math.max(120,Math.floor(totalIps()*160))}
 function chestReward(){return Math.max(600,Math.floor(totalIps()*900))}
 function qProg(type,amt){
@@ -1642,7 +1734,7 @@ function qProg(type,amt){
   for(const q of S.quests.list){
     if(q.t!==type||q.done)continue;
     q.prog=Math.min(q.goal,q.prog+amt);
-    if(q.prog>=q.goal){q.done=true;chime();toast("Квест выполнен!")}
+    if(q.prog>=q.goal){q.done=true;chime();toast(T("questDone"))}
     changed=true;
   }
   if(changed){qBadge();if($("questSheet").classList.contains("show"))renderQuests()}
@@ -1663,14 +1755,14 @@ function renderQuests(){
         <div class="qt">${qtxt(q)}</div>
         <div class="qbar"><i style="width:${pct}%"></i></div></div>
       <button class="qbtn" data-claim="${i}" ${q.done&&!q.claimed?"":"disabled"}>
-        ${q.claimed?"Готово":"+"+fmt(qReward())}</button></div>`;
+        ${q.claimed?T("claimed"):"+"+fmt(qReward())}</button></div>`;
   }
   const allClaimed=S.quests.list.length&&S.quests.list.every(q=>q.claimed);
   html+=`<div class="qrow" style="background:${S.quests.chest?"#F4EDE1":"#FFF6DF"}">
-    <div class="qi"><div class="qt">Сундук дня</div>
-      <div class="sd" style="font-size:11px;font-weight:800;color:var(--ink-soft)">Выполни все квесты — получи большой приз</div></div>
+    <div class="qi"><div class="qt">${T("chestDay")}</div>
+      <div class="sd" style="font-size:11px;font-weight:800;color:var(--ink-soft)">${T("chestDesc")}</div></div>
     <button class="qbtn chest" id="chestBtn" ${allClaimed&&!S.quests.chest?"":"disabled"}>
-      ${S.quests.chest?"Открыт":"Открыть"}</button></div>`;
+      ${S.quests.chest?T("chestOpened"):T("chestOpen")}</button></div>`;
   $("questBody").innerHTML=html;
   $("questBody").querySelectorAll("[data-claim]").forEach(b=>{
     b.onclick=()=>{
@@ -1690,8 +1782,8 @@ function renderQuests(){
     burst(W/2,H*.4,["#FFD983","#FFC2CF","#BFE3C8","#fff"],26,220);
     chime();
     let bonus="";
-    if(cats.length<CAT_CAP){spawnWalkIn(Math.max(1,S.best-3));bonus=" и новый котик!"}
-    toast("Сундук: +"+fmt(g)+" монеток"+bonus);
+    if(cats.length<CAT_CAP){spawnWalkIn(Math.max(1,S.best-3));bonus=T("chestBonusCat")}
+    toast(T("chestToast",fmt(g),bonus));
     refreshHud();renderQuests();qBadge();persist(true);
   };
 }
@@ -1714,14 +1806,14 @@ function refreshHud(){
   $("ips").textContent=fmt(totalIps());
   $("boostTag").style.display=boosted()?"inline-block":"none";
   const l=buyLvl(),c=buyCost();
-  $("buyTitle").textContent="Позвать: "+BREEDS[l-1].n;
+  $("buyTitle").textContent=T("buyName",catName(l));
   $("buyCost").textContent=fmt(c);
   $("buyBtn").classList.toggle("cant",S.coins<c);
 }
 $("buyBtn").onclick=()=>{
   const c=buyCost();
-  if(S.coins<c){toast("Не хватает монеток");return}
-  if(cats.length>=CAT_CAP){toast("На лугу нет места — слей одинаковых котиков");return}
+  if(S.coins<c){toast(T("notEnough"));return}
+  if(cats.length>=CAT_CAP){toast(T("noSpace"));return}
   S.coins-=c;S.buys++;
   spawnWalkIn(buyLvl());
   pop(520,.08);qProg("buy",1);refreshHud();persist();
@@ -1736,9 +1828,9 @@ function discover(lvl,sh){
   const rew=inc(lvl)*120;
   S.coins+=rew;
   modal(`<img id="portrait" src="${portraitOf(lvl,sh)}" alt="">
-    <h2>${sh?"Сияющий котик":"Новый котик"}: ${B.n}</h2>
-    <p>Уровень ${lvl} · +${fmt(inc(lvl)*(sh?3:1))}/с<br>Награда за открытие: <b>+${fmt(rew)}</b> монеток</p>
-    <div class="row"><button class="mbtn main" onclick="closeModal();maybeInterstitial()">Мур!</button></div>`);
+    <h2>${sh?T("discShiny"):T("discNew")}: ${catName(lvl)}</h2>
+    <p>${T("discLevel",lvl,fmt(inc(lvl)*(sh?3:1)))}<br>${T("discReward",fmt(rew))}</p>
+    <div class="row"><button class="mbtn main" onclick="closeModal();maybeInterstitial()">${T("discBtn")}</button></div>`);
 }
 function offlineCheck(){
   const dt=Math.min((Date.now()-S.last)/1000,OFFLINE_CAP);
@@ -1750,16 +1842,16 @@ function offlineCheck(){
       <circle cx="38" cy="38" r="34" fill="#EFEAFB"/>
       <path d="M48 22a17 17 0 1 0 8 26 14 14 0 0 1-8-26z" fill="#8F6FE0"/>
       <circle cx="52" cy="24" r="2.4" fill="#C0A9F5"/><circle cx="58" cy="34" r="1.7" fill="#C0A9F5"/></svg>
-    <h2>Пока тебя не было…</h2>
-    <p>Котики намурлыкали <b>${fmt(g)}</b> монеток</p>
+    <h2>${T("offTitle")}</h2>
+    <p>${T("offBody",fmt(g))}</p>
     <div class="row">
-      <button class="mbtn main" onclick="claimOff(${g},1)">Забрать</button>
+      <button class="mbtn main" onclick="claimOff(${g},1)">${T("claim")} +${fmt(g)}</button>
       <button class="mbtn adx" onclick="claimOff(${g},2)">
-        <svg width="15" height="15" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/><path d="M10 9v6l6-3z" fill="#5E9FDE"/></svg>x2</button>
+        <svg width="15" height="15" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/><path d="M10 9v6l6-3z" fill="#5E9FDE"/></svg>+${fmt(g*2)}</button>
     </div>`);
 }
 window.claimOff=function(g,m){
-  if(m===2){closeModal();showRewarded(()=>{S.coins+=g*2;toast("+"+fmt(g*2)+" монеток");refreshHud();persist(true)})}
+  if(m===2){closeModal();showRewarded(()=>{S.coins+=g*2;toast("+"+fmt(g*2)+" "+T("coinsWord"));refreshHud();persist(true)})}
   else{S.coins+=g;closeModal();refreshHud();persist(true)}
 };
 function dailyCheck(){
@@ -1774,9 +1866,9 @@ function dailyCheck(){
       <rect x="10" y="22" width="56" height="14" rx="5" fill="#FF8A6B"/>
       <rect x="34" y="22" width="8" height="42" fill="#FFE06E"/>
       <circle cx="38" cy="20" r="6" fill="#FFE06E"/></svg>
-    <h2>Ежедневный подарок</h2>
-    <p>День ${S.daily.streak} подряд — <b>${fmt(g)}</b> монеток</p>
-    <div class="row"><button class="mbtn main" onclick="S.coins+=${g};closeModal();refreshHud();persist(true)">Забрать</button></div>`);
+    <h2>${T("dailyTitle")}</h2>
+    <p>${T("dailyBody",S.daily.streak,fmt(g))}</p>
+    <div class="row"><button class="mbtn main" onclick="S.coins+=${g};closeModal();refreshHud();persist(true)">${T("claim")} +${fmt(g)}</button></div>`);
 }
 
 /* ---------------- Яндекс SDK ---------------- */
@@ -1794,22 +1886,22 @@ function showRewarded(onReward){
     onOpen:()=>{},
     onRewarded:onReward,
     onClose:()=>{},
-    onError:()=>toast("Реклама не загрузилась, попробуй позже")
+    onError:()=>toast(T("adFail"))
   }})}catch(e){onReward()}
 }
 $("freeBtn").onclick=()=>{
-  if(cats.length>=CAT_CAP){toast("Сначала освободи место на лугу");return}
+  if(cats.length>=CAT_CAP){toast(T("freeNoSpace"));return}
   showRewarded(()=>{
     const l=Math.max(1,S.best-3);
     if(cats.length>=CAT_CAP)return;
     spawnWalkIn(l);
-    toast(BREEDS[l-1].n+" спешит к тебе!");
+    toast(T("catComing",catName(l)));
     pop(540,.08);refreshHud();persist(true);
   });
 };
 $("boostBtn").onclick=()=>showRewarded(()=>{
   S.boostUntil=Date.now()+5*60*1000;
-  toast("Доход x2 на 5 минут!");
+  toast(T("boostOn"));
   burst(W/2,H*.4,["#C0A9F5","#8F6FE0","#fff"],16,150);
   refreshHud();persist(true);
 });
@@ -1949,8 +2041,29 @@ window.advanceTime=ms=>{
 };
 
 /* ---------------- старт ---------------- */
+function applyStaticI18n(){
+  document.documentElement.lang=lang;
+  document.title=T("title");
+  $("coinsLabel").textContent=T("coinsLabel");
+  $("incomeLabel").textContent=T("incomeLabel");
+  $("ipsUnit").textContent=T("perSec");
+  $("questFab").title=T("fabQuests");
+  $("shopFab").title=T("fabShop");
+  $("albumFab").title=T("fabAlbum");
+  $("questTitle").textContent=T("questsTitle");
+  $("shopTitle").textContent=T("shopTitle");
+  $("tabDecor").textContent=T("tabDecor");
+  $("tabUps").textContent=T("tabUps");
+  $("buyTitle").textContent=T("buyCat");
+  $("freeTitle").textContent=T("gift");
+  $("freeSub").textContent=T("watch");
+  $("boostTitle").textContent=T("boostBtn");
+  $("boostSub").textContent=T("boostMin");
+}
 function boot(raw){
   if(booted)return;booted=true;
+  lang=detectLang();
+  applyStaticI18n();
   if(raw)restore(raw);
   cats=[];decor=[];
   for(const cd of (S.cats||[]))makeCat(cd.l,clamp(cd.x,26,W-26),clamp(cd.y,fieldTop+14,fieldBot),cd.sh);
@@ -1975,14 +2088,9 @@ function tutorial(){
       <circle cx="33" cy="42" r="4.2" fill="#fff"/><circle cx="49" cy="42" r="4.2" fill="#fff"/>
       <circle cx="33.6" cy="43" r="2.4" fill="#3A2E26"/><circle cx="48.4" cy="43" r="2.4" fill="#3A2E26"/>
       <path d="M39 49h4l-2 2z" fill="#F08A5C"/></svg>
-    <h2>Добро пожаловать на луг!</h2>
-    <p style="text-align:left;line-height:1.6">
-      🐾 <b>Тащи</b> котика на такого же — они <b>сольются</b> в нового<br>
-      ✋ <b>Гладь</b> котиков — они дают монетки<br>
-      🏡 В <b>магазине</b> купи домик и прудик — котики будут в них играть<br>
-      📜 Выполняй <b>квесты</b> и открывай сундук<br>
-      🚪 Тесно на лугу? Тащи котика на табличку <b>«Отпустить»</b> — он уйдёт и оставит монетки</p>
-    <div class="row"><button class="mbtn main" onclick="closeModal()">Мур, понятно!</button></div>`);
+    <h2>${T("tutTitle")}</h2>
+    <p style="text-align:left;line-height:1.6">${T("tutBody")}</p>
+    <div class="row"><button class="mbtn main" onclick="closeModal()">${T("tutBtn")}</button></div>`);
 }
 (function init(){
   let localRaw=null;
