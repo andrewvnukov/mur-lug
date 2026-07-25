@@ -13,7 +13,7 @@
     --accent:#F49E6D; --accent-deep:#E07E4C;
     --gold:#E8B84B; --mint:#9CC97E; --lav:#B9A3E3;
   }
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none}
   html,body{height:100%;overflow:hidden}
   body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);position:fixed;inset:0;background:#AFCF87}
   #cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
@@ -149,6 +149,9 @@
       <svg width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5" fill="#8F6FE0"/><g fill="#fff"><ellipse cx="12" cy="14.4" rx="3" ry="2.4"/><circle cx="8.7" cy="10.6" r="1.4"/><circle cx="12" cy="9.4" r="1.4"/><circle cx="15.3" cy="10.6" r="1.4"/></g></svg>
       <span class="badge" id="albumBadge"></span>
     </button>
+    <button class="fab" id="settingsFab" title="Настройки">
+      <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#9AAEC9"/><path d="M12 4.8v1.6M12 17.6v1.6M4.8 12h1.6M17.6 12h1.6M6.6 6.6l1.1 1.1M16.3 16.3l1.1 1.1M6.6 17.4l1.1-1.1M16.3 7.7l1.1-1.1" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="3.6" fill="#fff"/><circle cx="12" cy="12" r="1.8" fill="#9AAEC9"/></svg>
+    </button>
   </div>
 
   <div class="spacer"></div>
@@ -176,6 +179,16 @@
 <div class="sheet" id="albumSheet">
   <div class="head"><h3>Альбом котиков</h3><button class="xbtn" data-close="albumSheet">✕</button></div>
   <div class="body"><div class="grid3" id="albumBody"></div></div>
+</div>
+<div class="sheet" id="settingsSheet">
+  <div class="head"><h3 id="settingsTitle">Настройки</h3><button class="xbtn" data-close="settingsSheet">✕</button></div>
+  <div class="body">
+    <div id="settingsLangLabel" style="font-weight:900;font-size:14px;margin:4px 2px 10px">Язык</div>
+    <div class="tabs" style="padding:0 0 10px">
+      <button class="tab" id="langRu">Русский</button>
+      <button class="tab" id="langEn">English</button>
+    </div>
+  </div>
 </div>
 
 <div id="overlay"><div class="modal" id="modalBox"></div></div>
@@ -256,6 +269,9 @@ const TX={
   fabQuests:{ru:"Квесты",en:"Quests"},
   fabShop:{ru:"Магазин",en:"Shop"},
   fabAlbum:{ru:"Альбом",en:"Album"},
+  fabSettings:{ru:"Настройки",en:"Settings"},
+  settingsTitle:{ru:"Настройки",en:"Settings"},
+  settingsLangLabel:{ru:"Язык",en:"Language"},
   buyCat:{ru:"Позвать котика",en:"Call a cat"},
   buyName:{ru:n=>"Позвать: "+n,en:n=>"Call: "+n},
   gift:{ru:"Подарок",en:"Gift"},
@@ -271,7 +287,7 @@ const TX={
   questDone:{ru:"Квест выполнен!",en:"Quest complete!"},
   claimed:{ru:"Готово",en:"Done"},
   chestDay:{ru:"Сундук дня",en:"Daily Chest"},
-  chestDesc:{ru:"Выполни все квесты — получи большой приз",en:"Complete all quests for a big prize"},
+  chestDesc:{ru:g=>"Выполни все квесты — получи <b>+"+g+"</b> монеток",en:g=>"Complete all quests to get <b>+"+g+"</b> coins"},
   chestOpen:{ru:"Открыть",en:"Open"},
   chestOpened:{ru:"Открыт",en:"Opened"},
   chestToast:{ru:(g,b)=>"Сундук: +"+g+" монеток"+b,en:(g,b)=>"Chest: +"+g+" coins"+b},
@@ -335,7 +351,7 @@ const OFFLINE_CAP=4*3600, OFFLINE_RATE=.5;
 let S={coins:20,cats:[],buys:0,best:1,boostUntil:0,last:Date.now(),
        daily:{d:"",streak:0},decor:[],album:{},
        quests:{d:"",list:[],chest:false},
-       up:{inc:0,off:0,shiny:0}};
+       up:{inc:0,off:0,shiny:0},lang:null};
 let cats=[],decor=[];
 const boosted=()=>Date.now()<S.boostUntil;
 const totalIps=()=>cats.reduce((t,c)=>t+catInc(c),0)*(boosted()?2:1);
@@ -1760,7 +1776,7 @@ function renderQuests(){
   const allClaimed=S.quests.list.length&&S.quests.list.every(q=>q.claimed);
   html+=`<div class="qrow" style="background:${S.quests.chest?"#F4EDE1":"#FFF6DF"}">
     <div class="qi"><div class="qt">${T("chestDay")}</div>
-      <div class="sd" style="font-size:11px;font-weight:800;color:var(--ink-soft)">${T("chestDesc")}</div></div>
+      <div class="sd" style="font-size:11px;font-weight:800;color:var(--ink-soft)">${T("chestDesc",fmt(chestReward()))}</div></div>
     <button class="qbtn chest" id="chestBtn" ${allClaimed&&!S.quests.chest?"":"disabled"}>
       ${S.quests.chest?T("chestOpened"):T("chestOpen")}</button></div>`;
   $("questBody").innerHTML=html;
@@ -1798,7 +1814,27 @@ function toggleSheet(id,render){
 $("questFab").onclick=()=>toggleSheet("questSheet",renderQuests);
 $("shopFab").onclick=()=>toggleSheet("shopSheet",renderShop);
 $("albumFab").onclick=()=>toggleSheet("albumSheet",renderAlbum);
+$("settingsFab").onclick=()=>toggleSheet("settingsSheet",renderSettings);
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>hideSheets());
+
+/* ---------------- настройки / выбор языка ---------------- */
+function renderSettings(){
+  $("langRu").classList.toggle("on",lang==="ru");
+  $("langEn").classList.toggle("on",lang==="en");
+}
+function setLang(l){
+  if(lang===l)return;
+  lang=l;S.lang=l;
+  applyStaticI18n();
+  refreshHud();
+  renderSettings();
+  if($("questSheet").classList.contains("show"))renderQuests();
+  if($("shopSheet").classList.contains("show"))renderShop();
+  if($("albumSheet").classList.contains("show"))renderAlbum();
+  persist(true);
+}
+$("langRu").onclick=()=>setLang("ru");
+$("langEn").onclick=()=>setLang("en");
 
 /* ---------------- HUD / экономика ---------------- */
 function refreshHud(){
@@ -2050,6 +2086,9 @@ function applyStaticI18n(){
   $("questFab").title=T("fabQuests");
   $("shopFab").title=T("fabShop");
   $("albumFab").title=T("fabAlbum");
+  $("settingsFab").title=T("fabSettings");
+  $("settingsTitle").textContent=T("settingsTitle");
+  $("settingsLangLabel").textContent=T("settingsLangLabel");
   $("questTitle").textContent=T("questsTitle");
   $("shopTitle").textContent=T("shopTitle");
   $("tabDecor").textContent=T("tabDecor");
@@ -2062,9 +2101,9 @@ function applyStaticI18n(){
 }
 function boot(raw){
   if(booted)return;booted=true;
-  lang=detectLang();
-  applyStaticI18n();
   if(raw)restore(raw);
+  lang=S.lang||detectLang();
+  applyStaticI18n();
   cats=[];decor=[];
   for(const cd of (S.cats||[]))makeCat(cd.l,clamp(cd.x,26,W-26),clamp(cd.y,fieldTop+14,fieldBot),cd.sh);
   for(const dd of (S.decor||[]))decor.push({id:dd.id,x:clamp(dd.x,34,W-34),y:clamp(dd.y,fieldTop+16,fieldBot),occ:0});
