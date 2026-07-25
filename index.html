@@ -424,6 +424,9 @@ function chime(){tone(660,.07,.25);setTimeout(()=>tone(880,.07,.3),90);setTimeou
 
 /* ---------------- canvas ---------------- */
 const cv=$("cv");let ctx=cv.getContext("2d");
+/* тот же стек шрифтов, что и у HUD: если веб-шрифт не догрузился,
+   canvas обязан откатиться на системный гротеск, а не на serif по умолчанию */
+const FONT=px=>`900 ${px}px 'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif`;
 /* десктоп: не выделять поле и не открывать контекстное меню (треб. платформы 1.6.2.7) */
 addEventListener("contextmenu",e=>e.preventDefault());
 document.addEventListener("selectstart",e=>e.preventDefault());
@@ -1046,7 +1049,7 @@ function drawCat(c,t,gCtx,forcePose){
     ctx.save();ctx.translate(c.x,c.y);
     // имя породы над котиком
     const nm=catName(c.lvl);
-    ctx.font="900 11px Nunito";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.font=FONT(11);ctx.textAlign="center";ctx.textBaseline="middle";
     const ny=-60*s;
     ctx.lineJoin="round";ctx.lineWidth=3.4;ctx.strokeStyle="rgba(255,250,236,.92)";
     ctx.strokeText(nm,0,ny);
@@ -1055,7 +1058,7 @@ function drawCat(c,t,gCtx,forcePose){
     const bw=c.sh?30:22;
     ctx.fillStyle=c.sh?"rgba(196,148,26,.9)":"rgba(74,63,58,.82)";
     rr(-bw/2,6,bw,13,6.5);ctx.fill();
-    ctx.fillStyle="#fff";ctx.font="900 9.5px Nunito";
+    ctx.fillStyle="#fff";ctx.font=FONT(9.5);
     ctx.fillText((c.sh?"★ ":"")+c.lvl,0,12.8);
     ctx.restore();
     if(c.sh&&Math.random()<0.02)
@@ -1443,7 +1446,7 @@ function drawParts(dt){
   for(const f of floats){
     f.t+=dt;
     ctx.globalAlpha=1-f.t/f.life;
-    ctx.font="900 15px Nunito";ctx.textAlign="center";
+    ctx.font=FONT(15);ctx.textAlign="center";
     ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=4;
     ctx.strokeText(f.txt,f.x,f.y-f.t*46);
     ctx.fillStyle=f.col;ctx.fillText(f.txt,f.x,f.y-f.t*46);
@@ -1568,7 +1571,7 @@ function drawReleaseZone(){
   ctx.fillStyle="#8A6A4C";
   ctx.beginPath();ctx.moveTo(z.x+16,z.y+29);ctx.lineTo(z.x+16,z.y+17);
   ctx.quadraticCurveTo(z.x+23,z.y+7,z.x+30,z.y+17);ctx.lineTo(z.x+30,z.y+29);ctx.closePath();ctx.fill();
-  ctx.fillStyle=INK;ctx.font="900 12.5px Nunito";ctx.textAlign="left";ctx.textBaseline="middle";
+  ctx.fillStyle=INK;ctx.font=FONT(12.5);ctx.textAlign="left";ctx.textBaseline="middle";
   ctx.fillText(T("releaseLabel"),z.x+40,z.y+z.h/2+1);
   ctx.restore();
 }
