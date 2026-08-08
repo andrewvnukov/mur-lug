@@ -118,9 +118,43 @@
   #toast{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);background:rgba(91,70,54,.95);color:#fff;
          font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:99px;opacity:0;transition:opacity .3s;
          z-index:120;pointer-events:none;max-width:86vw;text-align:center}
+
+  /* ---------- экран загрузки ----------
+     Тег <script> с SDK блокирует парсер, поэтому браузер успевает отрисовать
+     статическую разметку раньше, чем отработает наш скрипт. Без этого экрана
+     игрок видит русский HUD до автоопределения языка (п.2.14) и может нажимать
+     кнопки до вызова LoadingAPI.ready() (п.1.19). Экран лежит первым в <body>,
+     перекрывает всё и снимается только когда игра действительно готова. */
+  #loader{position:fixed;inset:0;z-index:500;background:linear-gradient(#CFE9F7 0%,#DCEFC8 55%,#AFCF87 100%);
+          display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;
+          transition:opacity .35s ease}
+  #loader.hide{opacity:0;pointer-events:none}
+  #loader svg{animation:bob 1.05s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-11px) rotate(3deg)}}
+  #loaderText{font-weight:900;font-size:15px;color:var(--ink);min-height:20px;letter-spacing:.3px}
+  #loaderDots{display:flex;gap:7px}
+  #loaderDots i{width:9px;height:9px;border-radius:50%;background:var(--ink);opacity:.25;animation:dot 1.1s infinite}
+  #loaderDots i:nth-child(2){animation-delay:.15s}
+  #loaderDots i:nth-child(3){animation-delay:.3s}
+  @keyframes dot{0%,100%{opacity:.25;transform:translateY(0)}40%{opacity:.9;transform:translateY(-5px)}}
 </style>
 </head>
 <body>
+
+<!-- первым в разметке: перекрывает игру до вызова LoadingAPI.ready().
+     Подпись намеренно пустая — её проставляет скрипт уже на нужном языке,
+     чтобы до автоопределения на экране не было текста ни на одном языке. -->
+<div id="loader">
+  <svg width="104" height="104" viewBox="0 0 82 82">
+    <circle cx="41" cy="43" r="30" fill="#F6D488"/>
+    <path d="M20 26l4 12 8-5z" fill="#F6D488"/><path d="M62 26l-4 12-8-5z" fill="#F6D488"/>
+    <circle cx="33" cy="42" r="4.2" fill="#fff"/><circle cx="49" cy="42" r="4.2" fill="#fff"/>
+    <circle cx="33.6" cy="43" r="2.4" fill="#3A2E26"/><circle cx="48.4" cy="43" r="2.4" fill="#3A2E26"/>
+    <path d="M39 49h4l-2 2z" fill="#F08A5C"/>
+  </svg>
+  <div id="loaderText"></div>
+  <div id="loaderDots"><i></i><i></i><i></i></div>
+</div>
 
 <canvas id="cv"></canvas>
 
@@ -272,6 +306,7 @@ const TX={
   fabSettings:{ru:"Настройки",en:"Settings"},
   settingsTitle:{ru:"Настройки",en:"Settings"},
   settingsLangLabel:{ru:"Язык",en:"Language"},
+  loading:{ru:"Загрузка…",en:"Loading…"},
   buyCat:{ru:"Позвать котика",en:"Call a cat"},
   buyName:{ru:n=>"Позвать: "+n,en:n=>"Call: "+n},
   gift:{ru:"Подарок",en:"Gift"},
@@ -2101,6 +2136,24 @@ function applyStaticI18n(){
   $("freeSub").textContent=T("watch");
   $("boostTitle").textContent=T("boostBtn");
   $("boostSub").textContent=T("boostMin");
+  $("loaderText").textContent=T("loading");
+}
+/* п.1.19: GameReady сообщаем ровно в тот момент, когда игра готова принимать
+   действия игрока — не раньше. Флаг взводим только после реального вызова,
+   иначе порядок «boot по таймауту → SDK подключился позже» съел бы событие. */
+let readySent=false;
+function signalReady(){
+  if(readySent||!booted||!ysdk)return;
+  try{
+    if(ysdk.features&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready){
+      ysdk.features.LoadingAPI.ready();readySent=true;
+    }
+  }catch(e){readySent=true}
+}
+function hideLoader(){
+  const el=$("loader");if(!el)return;
+  el.classList.add("hide");
+  setTimeout(()=>{el.style.display="none"},400);
 }
 function boot(raw){
   if(booted)return;booted=true;
@@ -2120,6 +2173,10 @@ function boot(raw){
   setTimeout(dailyCheck,700);
   if(!S.seen){setTimeout(tutorial,900)}
   requestAnimationFrame(frame);
+  /* всё построено и отрисовано — только теперь игра доступна для действий:
+     сообщаем GameReady и снимаем экран загрузки (п.1.19) */
+  signalReady();
+  hideLoader();
 }
 function tutorial(){
   if($("overlay").classList.contains("show")){setTimeout(tutorial,1500);return}
@@ -2137,10 +2194,24 @@ function tutorial(){
 (function init(){
   let localRaw=null;
   try{localRaw=localStorage.getItem("murlug")}catch(e){}
+  /* п.2.14: язык выбираем синхронно, до первого кадра и до инициализации SDK.
+     Раньше это делал только boot() — то есть после ответа YaGames.init()
+     (а в худшем случае через 4 с по таймауту), и всё это время интерфейс
+     висел на русском. Приоритет: ручной выбор игрока → локаль платформы
+     → локаль браузера. */
+  let savedLang=null;
+  try{savedLang=localRaw?(JSON.parse(localRaw)||{}).lang:null}catch(e){}
+  lang=savedLang||detectLang();
+  applyStaticI18n();
   if(window.YaGames){
     YaGames.init().then(sdk=>{
       ysdk=sdk;
-      try{sdk.features.LoadingAPI&&sdk.features.LoadingAPI.ready()}catch(e){}
+      /* локаль платформы точнее браузерной — уточняем, пока висит загрузка */
+      if(!savedLang){
+        const l=detectLang();
+        if(l!==lang){lang=l;applyStaticI18n();if(booted)refreshHud()}
+      }
+      signalReady();
       return sdk.getPlayer({scopes:false}).then(p=>{player=p;return p.getData(["save"])})
         .then(d=>boot(d&&d.save?d.save:localRaw))
         .catch(()=>boot(localRaw));
