@@ -211,7 +211,7 @@
   <div class="body" id="shopBody"></div>
 </div>
 <div class="sheet" id="albumSheet">
-  <div class="head"><h3>Альбом котиков</h3><button class="xbtn" data-close="albumSheet">✕</button></div>
+  <div class="head"><h3 id="albumTitleEl">Альбом котиков</h3><button class="xbtn" data-close="albumSheet">✕</button></div>
   <div class="body"><div class="grid3" id="albumBody"></div></div>
 </div>
 <div class="sheet" id="settingsSheet">
@@ -220,7 +220,7 @@
     <div id="settingsLangLabel" style="font-weight:900;font-size:14px;margin:4px 2px 10px">Язык</div>
     <div class="tabs" style="padding:0 0 10px">
       <button class="tab" id="langRu">Русский</button>
-      <button class="tab" id="langEn">English</button>
+      <button class="tab" id="langEn">Английский</button>
     </div>
   </div>
 </div>
@@ -306,6 +306,11 @@ const TX={
   fabSettings:{ru:"Настройки",en:"Settings"},
   settingsTitle:{ru:"Настройки",en:"Settings"},
   settingsLangLabel:{ru:"Язык",en:"Language"},
+  /* п.8.2.3: названия языков тоже переводим. Эндонимы («Русский» в английской
+     сборке) — обычная практика, но модерация проверяет буквально: текст должен
+     быть на языке черновика, а этот ярлык попадает и в EN-скриншоты. */
+  langRuName:{ru:"Русский",en:"Russian"},
+  langEnName:{ru:"Английский",en:"English"},
   loading:{ru:"Загрузка…",en:"Loading…"},
   buyCat:{ru:"Позвать котика",en:"Call a cat"},
   buyName:{ru:n=>"Позвать: "+n,en:n=>"Call: "+n},
@@ -2127,6 +2132,9 @@ function applyStaticI18n(){
   $("settingsFab").title=T("fabSettings");
   $("settingsTitle").textContent=T("settingsTitle");
   $("settingsLangLabel").textContent=T("settingsLangLabel");
+  $("langRu").textContent=T("langRuName");
+  $("langEn").textContent=T("langEnName");
+  $("albumTitleEl").textContent=T("albumTitle");
   $("questTitle").textContent=T("questsTitle");
   $("shopTitle").textContent=T("shopTitle");
   $("tabDecor").textContent=T("tabDecor");
