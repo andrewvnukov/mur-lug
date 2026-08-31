@@ -113,6 +113,7 @@
   .mbtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(91,70,54,.3)}
   .mbtn.main{background:var(--mint)}
   .mbtn.adx{background:#85B8E8}
+  .mbtn.ghost{background:#C4B7A2}
   #portrait{width:124px;height:124px;margin:0 auto;display:block}
 
   #toast{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);background:rgba(91,70,54,.95);color:#fff;
@@ -316,6 +317,17 @@ const TX={
   buyName:{ru:n=>"Позвать: "+n,en:n=>"Call: "+n},
   gift:{ru:"Подарок",en:"Gift"},
   watch:{ru:"смотреть",en:"watch"},
+  /* п.4.5.1: до показа ролика игрок должен точно знать, что получит.
+     Раньше кнопка говорила просто «Подарок», и что именно выдадут — котика,
+     монетки, бустер — было неясно. */
+  giftCat:{ru:n=>"Котик: "+n,en:n=>"Cat: "+n},
+  adConfirm:{ru:"Посмотреть ролик?",en:"Watch a video?"},
+  adRewardCat:{ru:(n,l,i)=>`Награда: котик «${n}», уровень ${l} — приносит <b>+${i}/с</b>`,
+               en:(n,l,i)=>`Reward: a ${n} cat, level ${l} — earns <b>+${i}/s</b>`},
+  adRewardBoost:{ru:(a,b)=>`Награда: доход ×2 на 5 минут — с <b>+${a}/с</b> до <b>+${b}/с</b>`,
+                 en:(a,b)=>`Reward: Income ×2 for 5 minutes — from <b>+${a}/s</b> to <b>+${b}/s</b>`},
+  adWatch:{ru:"Смотреть",en:"Watch"},
+  adCancel:{ru:"Отмена",en:"Cancel"},
   boostBtn:{ru:"Доход ×2",en:"Income ×2"},
   boostMin:{ru:"5 минут",en:"5 min"},
   notEnough:{ru:"Не хватает монеток",en:"Not enough coins"},
@@ -449,8 +461,23 @@ function fmt(n){
 function toast(t){const el=$("toast");el.textContent=t;el.style.opacity=1;
   clearTimeout(el._t);el._t=setTimeout(()=>el.style.opacity=0,1900)}
 
-let AC=null;
-function tone(f,vol,dur,type){try{
+/* п.4.7: пока показывается полноэкранная реклама (интерстишел или rewarded)
+   и пока вкладка скрыта, игра обязана молчать. Глушим с двух сторон: сам
+   AudioContext уходит в suspend, и новые ноты не создаются вовсе — иначе
+   котики продолжают попискивать поверх ролика. */
+let AC=null,adOn=false,pageHidden=false;
+const soundMuted=()=>adOn||pageHidden;
+function syncAudio(){try{
+  if(!AC)return;
+  if(soundMuted()){if(AC.state==="running")AC.suspend()}
+  else if(AC.state==="suspended")AC.resume();
+}catch(e){}}
+function adPause(){adOn=true;syncAudio()}
+function adResume(){adOn=false;syncAudio()}
+/* страховка: если onClose по какой-то причине не придёт, звук вернётся
+   при первом же касании игры — значит, ролик точно закрыт */
+addEventListener("pointerdown",()=>{if(adOn)adResume()},true);
+function tone(f,vol,dur,type){if(soundMuted())return;try{
   AC=AC||new(window.AudioContext||window.webkitAudioContext)();
   const o=AC.createOscillator(),g=AC.createGain();
   o.type=type||"sine";o.frequency.setValueAtTime(f,AC.currentTime);
@@ -1888,6 +1915,8 @@ function refreshHud(){
   $("buyTitle").textContent=T("buyName",catName(l));
   $("buyCost").textContent=fmt(c);
   $("buyBtn").classList.toggle("cant",S.coins<c);
+  /* п.4.5.1: на кнопке ролика видно, какой именно котик придёт */
+  $("freeTitle").textContent=T("giftCat",catName(freeCatLvl()));
 }
 $("buyBtn").onclick=()=>{
   const c=buyCost();
@@ -1956,34 +1985,64 @@ function maybeInterstitial(){
   if(!ysdk)return;
   if(Date.now()-lastInter<180000)return;
   lastInter=Date.now();
-  try{ysdk.adv.showFullscreenAdv({})}catch(e){}
+  try{ysdk.adv.showFullscreenAdv({callbacks:{
+    onOpen:adPause,
+    onClose:adResume,
+    onError:adResume
+  }})}catch(e){adResume()}
 }
 window.maybeInterstitial=maybeInterstitial;
 function showRewarded(onReward){
   if(!ysdk){onReward();return}
   try{ysdk.adv.showRewardedVideo({callbacks:{
-    onOpen:()=>{},
+    onOpen:adPause,
     onRewarded:onReward,
-    onClose:()=>{},
-    onError:()=>toast(T("adFail"))
-  }})}catch(e){onReward()}
+    onClose:adResume,
+    onError:()=>{adResume();toast(T("adFail"))}
+  }})}catch(e){adResume();onReward()}
 }
+/* п.4.5.1: сначала показываем, что именно дадут, и только потом ролик */
+function adOffer(pic,body,onYes){
+  modal(`${pic}
+    <h2>${T("adConfirm")}</h2>
+    <p>${body}</p>
+    <div class="row">
+      <button class="mbtn adx" id="adYes">
+        <svg width="15" height="15" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/><path d="M10 9v6l6-3z" fill="#5E9FDE"/></svg>${T("adWatch")}</button>
+      <button class="mbtn ghost" onclick="closeModal()">${T("adCancel")}</button>
+    </div>`);
+  $("adYes").onclick=()=>{closeModal();onYes()};
+}
+const freeCatLvl=()=>Math.max(1,S.best-3);
 $("freeBtn").onclick=()=>{
   if(cats.length>=CAT_CAP){toast(T("freeNoSpace"));return}
-  showRewarded(()=>{
-    const l=Math.max(1,S.best-3);
-    if(cats.length>=CAT_CAP)return;
-    spawnWalkIn(l);
-    toast(T("catComing",catName(l)));
-    pop(540,.08);refreshHud();persist(true);
-  });
+  const l=freeCatLvl();
+  adOffer(
+    `<img id="portrait" src="${portraitOf(l,false)}" alt="">`,
+    T("adRewardCat",catName(l),l,fmt(inc(l))),
+    ()=>showRewarded(()=>{
+      if(cats.length>=CAT_CAP)return;
+      spawnWalkIn(l);
+      toast(T("catComing",catName(l)));
+      pop(540,.08);refreshHud();persist(true);
+    })
+  );
 };
-$("boostBtn").onclick=()=>showRewarded(()=>{
-  S.boostUntil=Date.now()+5*60*1000;
-  toast(T("boostOn"));
-  burst(W/2,H*.4,["#C0A9F5","#8F6FE0","#fff"],16,150);
-  refreshHud();persist(true);
-});
+$("boostBtn").onclick=()=>{
+  const base=cats.reduce((t,c)=>t+catInc(c),0);
+  adOffer(
+    `<svg width="76" height="76" viewBox="0 0 76 76" style="display:block;margin:0 auto">
+       <circle cx="38" cy="38" r="34" fill="#EFEAFB"/>
+       <path d="M41 16 26 42h11l-3 18 15-26H38l3-18z" fill="#8F6FE0"/></svg>`,
+    T("adRewardBoost",fmt(base),fmt(base*2)),
+    ()=>showRewarded(()=>{
+      S.boostUntil=Date.now()+5*60*1000;
+      toast(T("boostOn"));
+      burst(W/2,H*.4,["#C0A9F5","#8F6FE0","#fff"],16,150);
+      refreshHud();persist(true);
+    })
+  );
+};
 
 /* ---------------- главный цикл ---------------- */
 let hintPair=null,hintT=0;
@@ -2102,7 +2161,10 @@ function frame(now,manual){
 }
 
 setInterval(()=>persist(),10000);
-document.addEventListener("visibilitychange",()=>{if(document.hidden)persist(true)});
+document.addEventListener("visibilitychange",()=>{
+  pageHidden=document.hidden;syncAudio();
+  if(document.hidden)persist(true);
+});
 
 /* ---------------- тест-хуки (для автотестов Playwright) ---------------- */
 window.render_game_to_text=()=>JSON.stringify({
@@ -2140,7 +2202,7 @@ function applyStaticI18n(){
   $("tabDecor").textContent=T("tabDecor");
   $("tabUps").textContent=T("tabUps");
   $("buyTitle").textContent=T("buyCat");
-  $("freeTitle").textContent=T("gift");
+  $("freeTitle").textContent=T("giftCat",catName(freeCatLvl()));
   $("freeSub").textContent=T("watch");
   $("boostTitle").textContent=T("boostBtn");
   $("boostSub").textContent=T("boostMin");
