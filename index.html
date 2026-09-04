@@ -465,18 +465,21 @@ function toast(t){const el=$("toast");el.textContent=t;el.style.opacity=1;
    и пока вкладка скрыта, игра обязана молчать. Глушим с двух сторон: сам
    AudioContext уходит в suspend, и новые ноты не создаются вовсе — иначе
    котики продолжают попискивать поверх ролика. */
-let AC=null,adOn=false,pageHidden=false;
+let AC=null,adOn=false,pageHidden=false,adSince=0;
 const soundMuted=()=>adOn||pageHidden;
 function syncAudio(){try{
   if(!AC)return;
   if(soundMuted()){if(AC.state==="running")AC.suspend()}
   else if(AC.state==="suspended")AC.resume();
 }catch(e){}}
-function adPause(){adOn=true;syncAudio()}
+function adPause(){adOn=true;adSince=Date.now();syncAudio()}
 function adResume(){adOn=false;syncAudio()}
-/* страховка: если onClose по какой-то причине не придёт, звук вернётся
-   при первом же касании игры — значит, ролик точно закрыт */
-addEventListener("pointerdown",()=>{if(adOn)adResume()},true);
+/* Страховка на случай, если onClose не придёт и игра останется немой.
+   Срабатывает только когда «реклама» висит дольше любого реального ролика:
+   оверлей SDK живёт в этом же документе, и обычное касание по нему
+   расглушило бы игру прямо во время показа — то есть вернуло бы нарушение. */
+const AD_MAX=180000;
+addEventListener("pointerdown",()=>{if(adOn&&Date.now()-adSince>AD_MAX)adResume()},true);
 function tone(f,vol,dur,type){if(soundMuted())return;try{
   AC=AC||new(window.AudioContext||window.webkitAudioContext)();
   const o=AC.createOscillator(),g=AC.createGain();
