@@ -13,7 +13,7 @@
     --accent:#F49E6D; --accent-deep:#E07E4C;
     --gold:#E8B84B; --mint:#9CC97E; --lav:#B9A3E3;
   }
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none}
   html,body{height:100%;overflow:hidden}
   body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);position:fixed;inset:0;background:#AFCF87}
   #cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
@@ -113,14 +113,49 @@
   .mbtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(91,70,54,.3)}
   .mbtn.main{background:var(--mint)}
   .mbtn.adx{background:#85B8E8}
+  .mbtn.ghost{background:#C4B7A2}
   #portrait{width:124px;height:124px;margin:0 auto;display:block}
 
   #toast{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);background:rgba(91,70,54,.95);color:#fff;
          font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:99px;opacity:0;transition:opacity .3s;
          z-index:120;pointer-events:none;max-width:86vw;text-align:center}
+
+  /* ---------- экран загрузки ----------
+     Тег <script> с SDK блокирует парсер, поэтому браузер успевает отрисовать
+     статическую разметку раньше, чем отработает наш скрипт. Без этого экрана
+     игрок видит русский HUD до автоопределения языка (п.2.14) и может нажимать
+     кнопки до вызова LoadingAPI.ready() (п.1.19). Экран лежит первым в <body>,
+     перекрывает всё и снимается только когда игра действительно готова. */
+  #loader{position:fixed;inset:0;z-index:500;background:linear-gradient(#CFE9F7 0%,#DCEFC8 55%,#AFCF87 100%);
+          display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;
+          transition:opacity .35s ease}
+  #loader.hide{opacity:0;pointer-events:none}
+  #loader svg{animation:bob 1.05s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-11px) rotate(3deg)}}
+  #loaderText{font-weight:900;font-size:15px;color:var(--ink);min-height:20px;letter-spacing:.3px}
+  #loaderDots{display:flex;gap:7px}
+  #loaderDots i{width:9px;height:9px;border-radius:50%;background:var(--ink);opacity:.25;animation:dot 1.1s infinite}
+  #loaderDots i:nth-child(2){animation-delay:.15s}
+  #loaderDots i:nth-child(3){animation-delay:.3s}
+  @keyframes dot{0%,100%{opacity:.25;transform:translateY(0)}40%{opacity:.9;transform:translateY(-5px)}}
 </style>
 </head>
 <body>
+
+<!-- первым в разметке: перекрывает игру до вызова LoadingAPI.ready().
+     Подпись намеренно пустая — её проставляет скрипт уже на нужном языке,
+     чтобы до автоопределения на экране не было текста ни на одном языке. -->
+<div id="loader">
+  <svg width="104" height="104" viewBox="0 0 82 82">
+    <circle cx="41" cy="43" r="30" fill="#F6D488"/>
+    <path d="M20 26l4 12 8-5z" fill="#F6D488"/><path d="M62 26l-4 12-8-5z" fill="#F6D488"/>
+    <circle cx="33" cy="42" r="4.2" fill="#fff"/><circle cx="49" cy="42" r="4.2" fill="#fff"/>
+    <circle cx="33.6" cy="43" r="2.4" fill="#3A2E26"/><circle cx="48.4" cy="43" r="2.4" fill="#3A2E26"/>
+    <path d="M39 49h4l-2 2z" fill="#F08A5C"/>
+  </svg>
+  <div id="loaderText"></div>
+  <div id="loaderDots"><i></i><i></i><i></i></div>
+</div>
 
 <canvas id="cv"></canvas>
 
@@ -149,6 +184,9 @@
       <svg width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5" fill="#8F6FE0"/><g fill="#fff"><ellipse cx="12" cy="14.4" rx="3" ry="2.4"/><circle cx="8.7" cy="10.6" r="1.4"/><circle cx="12" cy="9.4" r="1.4"/><circle cx="15.3" cy="10.6" r="1.4"/></g></svg>
       <span class="badge" id="albumBadge"></span>
     </button>
+    <button class="fab" id="settingsFab" title="Настройки">
+      <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#9AAEC9"/><path d="M12 4.8v1.6M12 17.6v1.6M4.8 12h1.6M17.6 12h1.6M6.6 6.6l1.1 1.1M16.3 16.3l1.1 1.1M6.6 17.4l1.1-1.1M16.3 7.7l1.1-1.1" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="3.6" fill="#fff"/><circle cx="12" cy="12" r="1.8" fill="#9AAEC9"/></svg>
+    </button>
   </div>
 
   <div class="spacer"></div>
@@ -174,8 +212,18 @@
   <div class="body" id="shopBody"></div>
 </div>
 <div class="sheet" id="albumSheet">
-  <div class="head"><h3>Альбом котиков</h3><button class="xbtn" data-close="albumSheet">✕</button></div>
+  <div class="head"><h3 id="albumTitleEl">Альбом котиков</h3><button class="xbtn" data-close="albumSheet">✕</button></div>
   <div class="body"><div class="grid3" id="albumBody"></div></div>
+</div>
+<div class="sheet" id="settingsSheet">
+  <div class="head"><h3 id="settingsTitle">Настройки</h3><button class="xbtn" data-close="settingsSheet">✕</button></div>
+  <div class="body">
+    <div id="settingsLangLabel" style="font-weight:900;font-size:14px;margin:4px 2px 10px">Язык</div>
+    <div class="tabs" style="padding:0 0 10px">
+      <button class="tab" id="langRu">Русский</button>
+      <button class="tab" id="langEn">Английский</button>
+    </div>
+  </div>
 </div>
 
 <div id="overlay"><div class="modal" id="modalBox"></div></div>
@@ -256,10 +304,30 @@ const TX={
   fabQuests:{ru:"Квесты",en:"Quests"},
   fabShop:{ru:"Магазин",en:"Shop"},
   fabAlbum:{ru:"Альбом",en:"Album"},
+  fabSettings:{ru:"Настройки",en:"Settings"},
+  settingsTitle:{ru:"Настройки",en:"Settings"},
+  settingsLangLabel:{ru:"Язык",en:"Language"},
+  /* п.8.2.3: названия языков тоже переводим. Эндонимы («Русский» в английской
+     сборке) — обычная практика, но модерация проверяет буквально: текст должен
+     быть на языке черновика, а этот ярлык попадает и в EN-скриншоты. */
+  langRuName:{ru:"Русский",en:"Russian"},
+  langEnName:{ru:"Английский",en:"English"},
+  loading:{ru:"Загрузка…",en:"Loading…"},
   buyCat:{ru:"Позвать котика",en:"Call a cat"},
   buyName:{ru:n=>"Позвать: "+n,en:n=>"Call: "+n},
   gift:{ru:"Подарок",en:"Gift"},
   watch:{ru:"смотреть",en:"watch"},
+  /* п.4.5.1: до показа ролика игрок должен точно знать, что получит.
+     Раньше кнопка говорила просто «Подарок», и что именно выдадут — котика,
+     монетки, бустер — было неясно. */
+  giftCat:{ru:n=>"Котик: "+n,en:n=>"Cat: "+n},
+  adConfirm:{ru:"Посмотреть ролик?",en:"Watch a video?"},
+  adRewardCat:{ru:(n,l,i)=>`Награда: котик «${n}», уровень ${l} — приносит <b>+${i}/с</b>`,
+               en:(n,l,i)=>`Reward: a ${n} cat, level ${l} — earns <b>+${i}/s</b>`},
+  adRewardBoost:{ru:(a,b)=>`Награда: доход ×2 на 5 минут — с <b>+${a}/с</b> до <b>+${b}/с</b>`,
+                 en:(a,b)=>`Reward: Income ×2 for 5 minutes — from <b>+${a}/s</b> to <b>+${b}/s</b>`},
+  adWatch:{ru:"Смотреть",en:"Watch"},
+  adCancel:{ru:"Отмена",en:"Cancel"},
   boostBtn:{ru:"Доход ×2",en:"Income ×2"},
   boostMin:{ru:"5 минут",en:"5 min"},
   notEnough:{ru:"Не хватает монеток",en:"Not enough coins"},
@@ -271,7 +339,7 @@ const TX={
   questDone:{ru:"Квест выполнен!",en:"Quest complete!"},
   claimed:{ru:"Готово",en:"Done"},
   chestDay:{ru:"Сундук дня",en:"Daily Chest"},
-  chestDesc:{ru:"Выполни все квесты — получи большой приз",en:"Complete all quests for a big prize"},
+  chestDesc:{ru:g=>"Выполни все квесты — получи <b>+"+g+"</b> монеток",en:g=>"Complete all quests to get <b>+"+g+"</b> coins"},
   chestOpen:{ru:"Открыть",en:"Open"},
   chestOpened:{ru:"Открыт",en:"Opened"},
   chestToast:{ru:(g,b)=>"Сундук: +"+g+" монеток"+b,en:(g,b)=>"Chest: +"+g+" coins"+b},
@@ -335,7 +403,7 @@ const OFFLINE_CAP=4*3600, OFFLINE_RATE=.5;
 let S={coins:20,cats:[],buys:0,best:1,boostUntil:0,last:Date.now(),
        daily:{d:"",streak:0},decor:[],album:{},
        quests:{d:"",list:[],chest:false},
-       up:{inc:0,off:0,shiny:0}};
+       up:{inc:0,off:0,shiny:0},lang:null};
 let cats=[],decor=[];
 const boosted=()=>Date.now()<S.boostUntil;
 const totalIps=()=>cats.reduce((t,c)=>t+catInc(c),0)*(boosted()?2:1);
@@ -393,8 +461,26 @@ function fmt(n){
 function toast(t){const el=$("toast");el.textContent=t;el.style.opacity=1;
   clearTimeout(el._t);el._t=setTimeout(()=>el.style.opacity=0,1900)}
 
-let AC=null;
-function tone(f,vol,dur,type){try{
+/* п.4.7: пока показывается полноэкранная реклама (интерстишел или rewarded)
+   и пока вкладка скрыта, игра обязана молчать. Глушим с двух сторон: сам
+   AudioContext уходит в suspend, и новые ноты не создаются вовсе — иначе
+   котики продолжают попискивать поверх ролика. */
+let AC=null,adOn=false,pageHidden=false,adSince=0;
+const soundMuted=()=>adOn||pageHidden;
+function syncAudio(){try{
+  if(!AC)return;
+  if(soundMuted()){if(AC.state==="running")AC.suspend()}
+  else if(AC.state==="suspended")AC.resume();
+}catch(e){}}
+function adPause(){adOn=true;adSince=Date.now();syncAudio()}
+function adResume(){adOn=false;syncAudio()}
+/* Страховка на случай, если onClose не придёт и игра останется немой.
+   Срабатывает только когда «реклама» висит дольше любого реального ролика:
+   оверлей SDK живёт в этом же документе, и обычное касание по нему
+   расглушило бы игру прямо во время показа — то есть вернуло бы нарушение. */
+const AD_MAX=180000;
+addEventListener("pointerdown",()=>{if(adOn&&Date.now()-adSince>AD_MAX)adResume()},true);
+function tone(f,vol,dur,type){if(soundMuted())return;try{
   AC=AC||new(window.AudioContext||window.webkitAudioContext)();
   const o=AC.createOscillator(),g=AC.createGain();
   o.type=type||"sine";o.frequency.setValueAtTime(f,AC.currentTime);
@@ -408,6 +494,9 @@ function chime(){tone(660,.07,.25);setTimeout(()=>tone(880,.07,.3),90);setTimeou
 
 /* ---------------- canvas ---------------- */
 const cv=$("cv");let ctx=cv.getContext("2d");
+/* тот же стек шрифтов, что и у HUD: если веб-шрифт не догрузился,
+   canvas обязан откатиться на системный гротеск, а не на serif по умолчанию */
+const FONT=px=>`900 ${px}px 'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif`;
 /* десктоп: не выделять поле и не открывать контекстное меню (треб. платформы 1.6.2.7) */
 addEventListener("contextmenu",e=>e.preventDefault());
 document.addEventListener("selectstart",e=>e.preventDefault());
@@ -1030,7 +1119,7 @@ function drawCat(c,t,gCtx,forcePose){
     ctx.save();ctx.translate(c.x,c.y);
     // имя породы над котиком
     const nm=catName(c.lvl);
-    ctx.font="900 11px Nunito";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.font=FONT(11);ctx.textAlign="center";ctx.textBaseline="middle";
     const ny=-60*s;
     ctx.lineJoin="round";ctx.lineWidth=3.4;ctx.strokeStyle="rgba(255,250,236,.92)";
     ctx.strokeText(nm,0,ny);
@@ -1039,7 +1128,7 @@ function drawCat(c,t,gCtx,forcePose){
     const bw=c.sh?30:22;
     ctx.fillStyle=c.sh?"rgba(196,148,26,.9)":"rgba(74,63,58,.82)";
     rr(-bw/2,6,bw,13,6.5);ctx.fill();
-    ctx.fillStyle="#fff";ctx.font="900 9.5px Nunito";
+    ctx.fillStyle="#fff";ctx.font=FONT(9.5);
     ctx.fillText((c.sh?"★ ":"")+c.lvl,0,12.8);
     ctx.restore();
     if(c.sh&&Math.random()<0.02)
@@ -1427,7 +1516,7 @@ function drawParts(dt){
   for(const f of floats){
     f.t+=dt;
     ctx.globalAlpha=1-f.t/f.life;
-    ctx.font="900 15px Nunito";ctx.textAlign="center";
+    ctx.font=FONT(15);ctx.textAlign="center";
     ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=4;
     ctx.strokeText(f.txt,f.x,f.y-f.t*46);
     ctx.fillStyle=f.col;ctx.fillText(f.txt,f.x,f.y-f.t*46);
@@ -1552,7 +1641,7 @@ function drawReleaseZone(){
   ctx.fillStyle="#8A6A4C";
   ctx.beginPath();ctx.moveTo(z.x+16,z.y+29);ctx.lineTo(z.x+16,z.y+17);
   ctx.quadraticCurveTo(z.x+23,z.y+7,z.x+30,z.y+17);ctx.lineTo(z.x+30,z.y+29);ctx.closePath();ctx.fill();
-  ctx.fillStyle=INK;ctx.font="900 12.5px Nunito";ctx.textAlign="left";ctx.textBaseline="middle";
+  ctx.fillStyle=INK;ctx.font=FONT(12.5);ctx.textAlign="left";ctx.textBaseline="middle";
   ctx.fillText(T("releaseLabel"),z.x+40,z.y+z.h/2+1);
   ctx.restore();
 }
@@ -1760,7 +1849,7 @@ function renderQuests(){
   const allClaimed=S.quests.list.length&&S.quests.list.every(q=>q.claimed);
   html+=`<div class="qrow" style="background:${S.quests.chest?"#F4EDE1":"#FFF6DF"}">
     <div class="qi"><div class="qt">${T("chestDay")}</div>
-      <div class="sd" style="font-size:11px;font-weight:800;color:var(--ink-soft)">${T("chestDesc")}</div></div>
+      <div class="sd" style="font-size:11px;font-weight:800;color:var(--ink-soft)">${T("chestDesc",fmt(chestReward()))}</div></div>
     <button class="qbtn chest" id="chestBtn" ${allClaimed&&!S.quests.chest?"":"disabled"}>
       ${S.quests.chest?T("chestOpened"):T("chestOpen")}</button></div>`;
   $("questBody").innerHTML=html;
@@ -1798,7 +1887,27 @@ function toggleSheet(id,render){
 $("questFab").onclick=()=>toggleSheet("questSheet",renderQuests);
 $("shopFab").onclick=()=>toggleSheet("shopSheet",renderShop);
 $("albumFab").onclick=()=>toggleSheet("albumSheet",renderAlbum);
+$("settingsFab").onclick=()=>toggleSheet("settingsSheet",renderSettings);
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>hideSheets());
+
+/* ---------------- настройки / выбор языка ---------------- */
+function renderSettings(){
+  $("langRu").classList.toggle("on",lang==="ru");
+  $("langEn").classList.toggle("on",lang==="en");
+}
+function setLang(l){
+  if(lang===l)return;
+  lang=l;S.lang=l;
+  applyStaticI18n();
+  refreshHud();
+  renderSettings();
+  if($("questSheet").classList.contains("show"))renderQuests();
+  if($("shopSheet").classList.contains("show"))renderShop();
+  if($("albumSheet").classList.contains("show"))renderAlbum();
+  persist(true);
+}
+$("langRu").onclick=()=>setLang("ru");
+$("langEn").onclick=()=>setLang("en");
 
 /* ---------------- HUD / экономика ---------------- */
 function refreshHud(){
@@ -1809,6 +1918,8 @@ function refreshHud(){
   $("buyTitle").textContent=T("buyName",catName(l));
   $("buyCost").textContent=fmt(c);
   $("buyBtn").classList.toggle("cant",S.coins<c);
+  /* п.4.5.1: на кнопке ролика видно, какой именно котик придёт */
+  $("freeTitle").textContent=T("giftCat",catName(freeCatLvl()));
 }
 $("buyBtn").onclick=()=>{
   const c=buyCost();
@@ -1877,34 +1988,64 @@ function maybeInterstitial(){
   if(!ysdk)return;
   if(Date.now()-lastInter<180000)return;
   lastInter=Date.now();
-  try{ysdk.adv.showFullscreenAdv({})}catch(e){}
+  try{ysdk.adv.showFullscreenAdv({callbacks:{
+    onOpen:adPause,
+    onClose:adResume,
+    onError:adResume
+  }})}catch(e){adResume()}
 }
 window.maybeInterstitial=maybeInterstitial;
 function showRewarded(onReward){
   if(!ysdk){onReward();return}
   try{ysdk.adv.showRewardedVideo({callbacks:{
-    onOpen:()=>{},
+    onOpen:adPause,
     onRewarded:onReward,
-    onClose:()=>{},
-    onError:()=>toast(T("adFail"))
-  }})}catch(e){onReward()}
+    onClose:adResume,
+    onError:()=>{adResume();toast(T("adFail"))}
+  }})}catch(e){adResume();onReward()}
 }
+/* п.4.5.1: сначала показываем, что именно дадут, и только потом ролик */
+function adOffer(pic,body,onYes){
+  modal(`${pic}
+    <h2>${T("adConfirm")}</h2>
+    <p>${body}</p>
+    <div class="row">
+      <button class="mbtn adx" id="adYes">
+        <svg width="15" height="15" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/><path d="M10 9v6l6-3z" fill="#5E9FDE"/></svg>${T("adWatch")}</button>
+      <button class="mbtn ghost" onclick="closeModal()">${T("adCancel")}</button>
+    </div>`);
+  $("adYes").onclick=()=>{closeModal();onYes()};
+}
+const freeCatLvl=()=>Math.max(1,S.best-3);
 $("freeBtn").onclick=()=>{
   if(cats.length>=CAT_CAP){toast(T("freeNoSpace"));return}
-  showRewarded(()=>{
-    const l=Math.max(1,S.best-3);
-    if(cats.length>=CAT_CAP)return;
-    spawnWalkIn(l);
-    toast(T("catComing",catName(l)));
-    pop(540,.08);refreshHud();persist(true);
-  });
+  const l=freeCatLvl();
+  adOffer(
+    `<img id="portrait" src="${portraitOf(l,false)}" alt="">`,
+    T("adRewardCat",catName(l),l,fmt(inc(l))),
+    ()=>showRewarded(()=>{
+      if(cats.length>=CAT_CAP)return;
+      spawnWalkIn(l);
+      toast(T("catComing",catName(l)));
+      pop(540,.08);refreshHud();persist(true);
+    })
+  );
 };
-$("boostBtn").onclick=()=>showRewarded(()=>{
-  S.boostUntil=Date.now()+5*60*1000;
-  toast(T("boostOn"));
-  burst(W/2,H*.4,["#C0A9F5","#8F6FE0","#fff"],16,150);
-  refreshHud();persist(true);
-});
+$("boostBtn").onclick=()=>{
+  const base=cats.reduce((t,c)=>t+catInc(c),0);
+  adOffer(
+    `<svg width="76" height="76" viewBox="0 0 76 76" style="display:block;margin:0 auto">
+       <circle cx="38" cy="38" r="34" fill="#EFEAFB"/>
+       <path d="M41 16 26 42h11l-3 18 15-26H38l3-18z" fill="#8F6FE0"/></svg>`,
+    T("adRewardBoost",fmt(base),fmt(base*2)),
+    ()=>showRewarded(()=>{
+      S.boostUntil=Date.now()+5*60*1000;
+      toast(T("boostOn"));
+      burst(W/2,H*.4,["#C0A9F5","#8F6FE0","#fff"],16,150);
+      refreshHud();persist(true);
+    })
+  );
+};
 
 /* ---------------- главный цикл ---------------- */
 let hintPair=null,hintT=0;
@@ -2023,7 +2164,10 @@ function frame(now,manual){
 }
 
 setInterval(()=>persist(),10000);
-document.addEventListener("visibilitychange",()=>{if(document.hidden)persist(true)});
+document.addEventListener("visibilitychange",()=>{
+  pageHidden=document.hidden;syncAudio();
+  if(document.hidden)persist(true);
+});
 
 /* ---------------- тест-хуки (для автотестов Playwright) ---------------- */
 window.render_game_to_text=()=>JSON.stringify({
@@ -2050,21 +2194,45 @@ function applyStaticI18n(){
   $("questFab").title=T("fabQuests");
   $("shopFab").title=T("fabShop");
   $("albumFab").title=T("fabAlbum");
+  $("settingsFab").title=T("fabSettings");
+  $("settingsTitle").textContent=T("settingsTitle");
+  $("settingsLangLabel").textContent=T("settingsLangLabel");
+  $("langRu").textContent=T("langRuName");
+  $("langEn").textContent=T("langEnName");
+  $("albumTitleEl").textContent=T("albumTitle");
   $("questTitle").textContent=T("questsTitle");
   $("shopTitle").textContent=T("shopTitle");
   $("tabDecor").textContent=T("tabDecor");
   $("tabUps").textContent=T("tabUps");
   $("buyTitle").textContent=T("buyCat");
-  $("freeTitle").textContent=T("gift");
+  $("freeTitle").textContent=T("giftCat",catName(freeCatLvl()));
   $("freeSub").textContent=T("watch");
   $("boostTitle").textContent=T("boostBtn");
   $("boostSub").textContent=T("boostMin");
+  $("loaderText").textContent=T("loading");
+}
+/* п.1.19: GameReady сообщаем ровно в тот момент, когда игра готова принимать
+   действия игрока — не раньше. Флаг взводим только после реального вызова,
+   иначе порядок «boot по таймауту → SDK подключился позже» съел бы событие. */
+let readySent=false;
+function signalReady(){
+  if(readySent||!booted||!ysdk)return;
+  try{
+    if(ysdk.features&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready){
+      ysdk.features.LoadingAPI.ready();readySent=true;
+    }
+  }catch(e){readySent=true}
+}
+function hideLoader(){
+  const el=$("loader");if(!el)return;
+  el.classList.add("hide");
+  setTimeout(()=>{el.style.display="none"},400);
 }
 function boot(raw){
   if(booted)return;booted=true;
-  lang=detectLang();
-  applyStaticI18n();
   if(raw)restore(raw);
+  lang=S.lang||detectLang();
+  applyStaticI18n();
   cats=[];decor=[];
   for(const cd of (S.cats||[]))makeCat(cd.l,clamp(cd.x,26,W-26),clamp(cd.y,fieldTop+14,fieldBot),cd.sh);
   for(const dd of (S.decor||[]))decor.push({id:dd.id,x:clamp(dd.x,34,W-34),y:clamp(dd.y,fieldTop+16,fieldBot),occ:0});
@@ -2078,6 +2246,10 @@ function boot(raw){
   setTimeout(dailyCheck,700);
   if(!S.seen){setTimeout(tutorial,900)}
   requestAnimationFrame(frame);
+  /* всё построено и отрисовано — только теперь игра доступна для действий:
+     сообщаем GameReady и снимаем экран загрузки (п.1.19) */
+  signalReady();
+  hideLoader();
 }
 function tutorial(){
   if($("overlay").classList.contains("show")){setTimeout(tutorial,1500);return}
@@ -2095,10 +2267,24 @@ function tutorial(){
 (function init(){
   let localRaw=null;
   try{localRaw=localStorage.getItem("murlug")}catch(e){}
+  /* п.2.14: язык выбираем синхронно, до первого кадра и до инициализации SDK.
+     Раньше это делал только boot() — то есть после ответа YaGames.init()
+     (а в худшем случае через 4 с по таймауту), и всё это время интерфейс
+     висел на русском. Приоритет: ручной выбор игрока → локаль платформы
+     → локаль браузера. */
+  let savedLang=null;
+  try{savedLang=localRaw?(JSON.parse(localRaw)||{}).lang:null}catch(e){}
+  lang=savedLang||detectLang();
+  applyStaticI18n();
   if(window.YaGames){
     YaGames.init().then(sdk=>{
       ysdk=sdk;
-      try{sdk.features.LoadingAPI&&sdk.features.LoadingAPI.ready()}catch(e){}
+      /* локаль платформы точнее браузерной — уточняем, пока висит загрузка */
+      if(!savedLang){
+        const l=detectLang();
+        if(l!==lang){lang=l;applyStaticI18n();if(booted)refreshHud()}
+      }
+      signalReady();
       return sdk.getPlayer({scopes:false}).then(p=>{player=p;return p.getData(["save"])})
         .then(d=>boot(d&&d.save?d.save:localRaw))
         .catch(()=>boot(localRaw));
