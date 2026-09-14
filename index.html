@@ -29,6 +29,49 @@
   .chip .col{display:flex;flex-direction:column;gap:1px}
   #boostTag{display:none;margin-left:2px;background:var(--lav);color:#fff;font-size:10px;font-weight:900;padding:3px 8px;border-radius:99px;border:2px solid var(--line)}
 
+  /* ---------- средний и дальний горизонт ----------
+     Полоска маршрута висит прямо в HUD: без открытых меню с экрана должно
+     читаться, на какой остановке игрок и сколько пунктов закрыто. */
+  .routebar{pointer-events:auto;margin-top:8px;background:var(--paper);border:2.5px solid var(--line);
+       border-radius:14px;padding:6px 11px 7px;box-shadow:0 3px 0 rgba(91,70,54,.28);cursor:pointer;
+       display:flex;flex-direction:column;gap:5px;align-self:flex-start;max-width:min(300px,72%)}
+  .routebar .rt{display:flex;align-items:baseline;gap:7px;min-width:0}
+  .routebar .rn{font-weight:900;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .routebar .rc{font-size:10px;font-weight:900;color:var(--ink-soft);white-space:nowrap;margin-left:auto}
+  .routebar .rd{display:flex;gap:4px}
+  .routebar .rd i{flex:1;height:6px;border-radius:4px;background:#EFE3C8;border:1.5px solid #D9C8A2;overflow:hidden;display:block}
+  .routebar .rd i b{display:block;height:100%;background:#8FBF6E}
+  .routebar .rd i.ok b{background:var(--gold)}
+
+  .rstop{background:#FFFDF4;border:2px solid #E0CFA8;border-radius:16px;padding:11px 12px;margin-bottom:9px}
+  .rstop.now{border-color:var(--accent);background:#FFF6EC;box-shadow:0 3px 0 rgba(91,70,54,.14)}
+  .rstop.done{opacity:.72}
+  .rstop .rh{display:flex;align-items:center;gap:8px}
+  .rstop .rnum{width:26px;height:26px;border-radius:50%;background:#F1E4C3;border:2px solid var(--line);flex:none;
+       display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px}
+  .rstop.done .rnum{background:var(--mint);color:#fff}
+  .rstop.now .rnum{background:var(--accent);color:#fff}
+  .rstop .rname{font-weight:900;font-size:14px;flex:1;min-width:0}
+  .rstop .rtw{font-size:11px;font-weight:800;color:var(--ink-soft);margin-top:5px;line-height:1.35}
+  .rstop .ritem{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px;font-weight:800}
+  .rstop .ritem .rmark{width:17px;height:17px;border-radius:6px;border:2px solid #D9C8A2;background:#fff;flex:none;
+       display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff}
+  .rstop .ritem.ok .rmark{background:var(--mint);border-color:var(--mint)}
+  .rstop .ritem .rtxt{flex:1;min-width:0}
+  .rstop .ritem .rval{font-size:11px;color:var(--ink-soft);white-space:nowrap}
+  .rfog{filter:blur(0);color:var(--ink-soft)}
+
+  /* контекстная подсказка (idle-monetization §7): одна за раз, сама уходит */
+  #tip{position:fixed;z-index:130;width:224px;background:var(--paper);border:2.5px solid var(--line);border-radius:15px;
+       padding:10px 12px;font-size:12px;font-weight:800;line-height:1.4;box-shadow:0 6px 0 rgba(91,70,54,.28);
+       display:none;transform:translate(-50%,-100%);pointer-events:none}
+  #tip.show{display:block;animation:mIn .25s cubic-bezier(.34,1.4,.5,1)}
+  #tip:after{content:"";position:absolute;left:50%;bottom:-9px;margin-left:-8px;width:0;height:0;
+       border:8px solid transparent;border-top-color:var(--line);border-bottom:0}
+  .tipTarget{position:relative;z-index:16;outline:3px solid var(--gold);outline-offset:3px;border-radius:15px;
+       animation:tipPulse 1.2s ease-in-out infinite}
+  @keyframes tipPulse{0%,100%{outline-color:rgba(232,184,75,.95)}50%{outline-color:rgba(232,184,75,.35)}}
+
   .fabs{position:absolute;right:12px;top:calc(64px + env(safe-area-inset-top));display:flex;flex-direction:column;gap:10px}
   .fab{pointer-events:auto;width:47px;height:47px;border-radius:15px;border:2.5px solid var(--line);background:var(--paper);
        box-shadow:0 3px 0 rgba(91,70,54,.28);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;
@@ -161,7 +204,7 @@
 
 <div id="hud">
   <div class="top">
-    <div class="chip">
+    <div class="chip" id="coinsChip">
       <svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="12" fill="#F2B23C"/><circle cx="13" cy="13" r="9.2" fill="#FFD983"/><g fill="#DE962A"><ellipse cx="13" cy="15.6" rx="3.4" ry="2.7"/><circle cx="9.2" cy="11.4" r="1.5"/><circle cx="13" cy="10.2" r="1.5"/><circle cx="16.8" cy="11.4" r="1.5"/></g></svg>
       <div class="col"><div class="v" id="coins">0</div><div class="l" id="coinsLabel">МОНЕТКИ</div></div>
     </div>
@@ -170,6 +213,12 @@
       <div class="col"><div class="v" style="color:#4EA574">+<span id="ips">0</span><span id="ipsUnit">/с</span></div><div class="l" id="incomeLabel">ДОХОД</div></div>
       <span id="boostTag">×2</span>
     </div>
+  </div>
+
+  <!-- дальний горизонт: видно с первого захода и открывается в одно нажатие -->
+  <div class="routebar" id="routeBar">
+    <div class="rt"><span class="rn" id="routeName"></span><span class="rc" id="routeCount"></span></div>
+    <div class="rd"><i id="rd0"><b></b></i><i id="rd1"><b></b></i><i id="rd2"><b></b></i></div>
   </div>
 
   <div class="fabs">
@@ -223,10 +272,16 @@
       <button class="tab" id="langRu">Русский</button>
       <button class="tab" id="langEn">Английский</button>
     </div>
+    <div id="extrasBox"></div>
   </div>
+</div>
+<div class="sheet" id="routeSheet">
+  <div class="head"><h3 id="routeTitle">Маршрут</h3><button class="xbtn" data-close="routeSheet">✕</button></div>
+  <div class="body" id="routeBody"></div>
 </div>
 
 <div id="overlay"><div class="modal" id="modalBox"></div></div>
+<div id="tip"></div>
 <div id="toast"></div>
 
 <script src="https://yandex.ru/games/sdk/v2" onerror="console.warn('SDK offline — локальный режим')"></script>
@@ -387,32 +442,134 @@ const TX={
   upShN:{ru:"Звёздная пыльца",en:"Stardust"},
   upShD:{ru:l=>`Шанс сияющего котика при слиянии: ${(shinyChance()*100).toFixed(1)}%`,en:l=>`Shiny cat chance on merge: ${(shinyChance()*100).toFixed(1)}%`},
   title:{ru:"Мур-Луг",en:"Purr Meadow"},
+
+  /* ---- маршрут: дальний горизонт (playermotivation §2) ---- */
+  routeTitle:{ru:"Маршрут по лугу",en:"Meadow Route"},
+  routeOf:{ru:(a,b)=>a+" из "+b,en:(a,b)=>a+" of "+b},
+  routeLocked:{ru:"???",en:"???"},
+  routeLockedSub:{ru:"Дойди сюда, чтобы узнать",en:"Get here to find out"},
+  routeLoop:{ru:n=>"Круг "+n,en:n=>"Loop "+n},
+  routeDoneTag:{ru:"Пройдено",en:"Cleared"},
+  routeMoveTitle:{ru:n=>"Новое место: "+n,en:n=>"New spot: "+n},
+  routeMoveBody:{ru:(tw,g)=>`${tw}<br><br>Ничего не потеряно: котики, улучшения и монетки едут с тобой.<br>Награда за остановку: <b>+${g}</b> монеток`,
+                 en:(tw,g)=>`${tw}<br><br>Nothing is lost: your cats, upgrades and coins come along.<br>Stop reward: <b>+${g}</b> coins`},
+  routeMoveBtn:{ru:"В путь!",en:"Let's go!"},
+  routeBonus:{ru:n=>`Пройденные места приносят фоном: доход +${n}%`,en:n=>`Cleared spots keep earning: income +${n}%`},
+  routeFinTitle:{ru:"Ты прошёл весь луг!",en:"You've walked the whole meadow!"},
+  routeFinBody:{ru:(n,b)=>`Все ${n} мест пройдены — и это настоящий финал, а не «продолжение следует».<br><br>Луг открывается заново, круг ${b}: те же места, но богаче, а весь пройденный путь остаётся с тобой навсегда.`,
+                en:(n,b)=>`All ${n} spots cleared — a real ending, not a "to be continued".<br><br>The meadow opens again, loop ${b}: the same spots, richer now, and everything you walked keeps working for you forever.`},
+  routeFinBtn:{ru:"Дальше!",en:"Onward!"},
+  rGoalBreeds:{ru:n=>"Открыть пород: "+n,en:n=>"Discover breeds: "+n},
+  rGoalIps:{ru:n=>"Довести доход до "+n+"/с",en:n=>"Reach "+n+"/s income"},
+  rGoalMerge:{ru:n=>"Слить котиков: "+n,en:n=>"Merge cats: "+n},
+  rGoalChat:{ru:n=>"Подружить котиков: "+n,en:n=>"Make cats friends: "+n},
+  rGoalPet:{ru:n=>"Погладить котиков: "+n,en:n=>"Pet cats: "+n},
+  rGoalDecor:{ru:n=>"Поставить украшений: "+n,en:n=>"Place decorations: "+n},
+  rGoalChest:{ru:n=>"Открыть сундуков: "+n,en:n=>"Open chests: "+n},
+  rGoalShiny:{ru:n=>"Найти сияющих: "+n,en:n=>"Find shiny cats: "+n},
+  r1n:{ru:"Солнечный луг",en:"Sunny Meadow"},
+  r1t:{ru:"Здесь всё начинается: котики, монетки и первые слияния.",en:"Where it all starts: cats, coins and your first merges."},
+  r2n:{ru:"Ромашковый склон",en:"Daisy Slope"},
+  r2t:{ru:"Новое правило: игрушки и украшения приносят в полтора раза больше.",en:"New rule: toys and decorations pay one and a half times more."},
+  r3n:{ru:"Тенистая роща",en:"Shady Grove"},
+  r3t:{ru:"Новое правило: спящие котики приносят вдвое больше.",en:"New rule: sleeping cats earn twice as much."},
+  r4n:{ru:"Прудовая низина",en:"Pond Hollow"},
+  r4t:{ru:"Новое правило: болтовня котиков приносит в полтора раза больше.",en:"New rule: cat chats pay one and a half times more."},
+  r5n:{ru:"Закатный холм",en:"Sunset Hill"},
+  r5t:{ru:"Новое правило: поглаживание приносит вдвое больше.",en:"New rule: petting pays twice as much."},
+  r6n:{ru:"Звёздная поляна",en:"Starlit Glade"},
+  r6t:{ru:"Новое правило: сияющие котики попадаются вдвое чаще.",en:"New rule: shiny cats turn up twice as often."},
+
+  /* ---- новые слоты за ролик (idle-monetization §2.1) ---- */
+  adRewardDaily:{ru:(a,b)=>`Награда: ежедневный подарок вдвое — не <b>+${a}</b>, а <b>+${b}</b> монеток`,
+                 en:(a,b)=>`Reward: double daily gift — <b>+${b}</b> coins instead of <b>+${a}</b>`},
+  adRewardChest:{ru:(a,b)=>`Награда: сундук дня вдвое — не <b>+${a}</b>, а <b>+${b}</b> монеток`,
+                 en:(a,b)=>`Reward: double daily chest — <b>+${b}</b> coins instead of <b>+${a}</b>`},
+  adRewardReroll:{ru:n=>`Награда: квест «${n}» заменится на другой`,en:n=>`Reward: the quest "${n}" is swapped for a different one`},
+  adRewardOffline:{ru:(a,b)=>`Награда: офлайн-доход вдвое — не <b>+${a}</b>, а <b>+${b}</b> монеток`,
+                   en:(a,b)=>`Reward: double offline income — <b>+${b}</b> coins instead of <b>+${a}</b>`},
+  rerollTitle:{ru:"Заменить",en:"Swap"},
+  rerollDone:{ru:"Квест заменён",en:"Quest swapped"},
+  rerollNone:{ru:"Менять больше не на что",en:"Nothing left to swap to"},
+
+  /* ---- окно возвращения построчно (idle-monetization §5.3) ---- */
+  offAway:{ru:h=>"Тебя не было "+h,en:h=>"You were away for "+h},
+  offHours:{ru:(h,m)=>h?h+" ч "+m+" мин":m+" мин",en:(h,m)=>h?h+" h "+m+" min":m+" min"},
+  offRowCats:{ru:n=>"Котиков мурлыкало",en:n=>"Cats purring"},
+  offRowRate:{ru:"Доход во сне",en:"Sleeping rate"},
+  offRowTotal:{ru:"Итого",en:"Total"},
+  offCapped:{ru:h=>`Копилка полна: она вмещает ${h} ч, дальше котики отдыхали. Улучшение «Сонные накопления» поднимает ставку.`,
+             en:h=>`The jar is full: it holds ${h} h, after that the cats just rested. The "Sleepy Savings" upgrade raises the rate.`},
+
+  /* ---- инструменты удержания площадки (idle-monetization §6) ---- */
+  scTitle:{ru:"Ярлык на экран",en:"Add to home screen"},
+  scDesc:{ru:g=>"Добавь Мур-Луг на главный экран — заходить станет проще, а котики подарят <b>+"+g+"</b> монеток",
+          en:g=>"Add Purr Meadow to your home screen — easier to come back, and the cats will give you <b>+"+g+"</b> coins"},
+  scAdd:{ru:"Добавить",en:"Add"},
+  scLater:{ru:"Не сейчас",en:"Not now"},
+  scDone:{ru:g=>"Ярлык добавлен! +"+g+" монеток",en:g=>"Shortcut added! +"+g+" coins"},
+  scUnavailable:{ru:"Здесь ярлык добавить нельзя",en:"Shortcut isn't available here"},
+  extrasTitle:{ru:"Ещё",en:"More"},
+  rateBtn:{ru:"Оценить игру",en:"Rate the game"},
+  rateUnavailable:{ru:"Оценку сейчас оставить нельзя",en:"Rating isn't available right now"},
+  rateThanks:{ru:"Спасибо! Котики мурчат",en:"Thank you! The cats are purring"},
+
+  /* ---- контекстные подсказки (idle-monetization §7) ---- */
+  tipBoost:{ru:"Хочешь вдвое больше монеток? Посмотри короткий ролик — доход ×2 на 5 минут",
+            en:"Want twice the coins? Watch a short video — income ×2 for 5 minutes"},
+  tipOffline:{ru:"Котики мурлычут и без тебя: загляни завтра — копилка будет полной",
+              en:"Cats keep purring while you're away — come back tomorrow and the jar will be full"},
+  tipRoute:{ru:"Здесь видно, куда ты идёшь: маршрут по лугу и что нужно для следующего места",
+            en:"This shows where you're headed: the meadow route and what the next spot needs"},
 };
 function T(k,...a){const e=TX[k];if(!e)return k;let v=e[lang]!=null?e[lang]:e.ru;return typeof v==="function"?v(...a):v;}
 
 /* ---------------- баланс ---------------- */
 const inc=l=>Math.ceil(Math.pow(2.05,l-1));
-const catInc=c=>inc(c.lvl)*(c.sh?3:1)*incMult();
+const catInc=c=>inc(c.lvl)*(c.sh?3:1)*incMult()*routeMult();
 const BASE_COST=15;
-const buyLvl=()=>Math.max(1,Math.floor(S.best/2));
-const buyCost=()=>Math.ceil(BASE_COST*Math.pow(1.17,S.buys)*Math.pow(2.35,buyLvl()-1));
+/* Котик покупается на два уровня ниже рекорда: новый рекорд стоит ровно
+   восемь покупок, сколько бы ни было пройдено. Раньше было floor(best/2),
+   и число покупок на один рекорд само росло как 2^(рекорд/2). */
+const buyLvl=()=>Math.max(1,Math.min(MAXLVL,S.best-2));
+/* Цена считается от текущего дохода игрока, а не от счётчика покупок.
+   Счётчик давал множитель 1.17^куплено — то есть экспоненту от экспоненты,
+   которая обгоняла одинарную экспоненту дохода и намертво запирала игру
+   около девятой породы из тридцати (разбор в BALANCE-AUDIT.md). Теперь
+   ожидание растёт с рекордом плавно: ~20 с в начале, ~3 мин под конец. */
+const buySecs=()=>12+6*S.best;
+const buyCost=()=>Math.ceil(Math.max(BASE_COST,baseIps()*buySecs()));
 const CAT_CAP=12;
-const OFFLINE_CAP=4*3600, OFFLINE_RATE=.5;
+/* Потолок 10 ч закрывает главный сценарий возвращаемости — «зашёл утром,
+   забрал за ночь». Порог показа окна (1 мин) заведомо меньше потолка,
+   поэтому мёртвой зоны «уже максимум, но окна нет» не возникает. */
+const OFFLINE_CAP=10*3600, OFFLINE_MIN=60, OFFLINE_RATE=.5;
 
 /* ---------------- состояние ---------------- */
 let S={coins:20,cats:[],buys:0,best:1,boostUntil:0,last:Date.now(),
        daily:{d:"",streak:0},decor:[],album:{},
        quests:{d:"",list:[],chest:false},
-       up:{inc:0,off:0,shiny:0},lang:null};
+       up:{inc:0,off:0,shiny:0},lang:null,
+       /* маршрут: номер остановки, счётчик её «сделать»-пункта, до какой
+          остановки открыт туман на карте, номер круга */
+       route:0,ract:0,rseen:0,loop:0,rshin:0,loopIps:0,
+       tips:{},sc:0,rated:0};
 let cats=[],decor=[];
 const boosted=()=>Date.now()<S.boostUntil;
-const totalIps=()=>cats.reduce((t,c)=>t+catInc(c),0)*(boosted()?2:1);
+/* Доход без временного множителя. Всё, что не должно зависеть от бустера
+   за ролик — цена котика, награды за квесты, сундук, ежедневка, — считается
+   отсюда: временный множитель не имеет права протекать в постоянные
+   величины (idle-economy-balance §6, правило 3). */
+const baseIps=()=>cats.reduce((t,c)=>t+catInc(c),0);
+const totalIps=()=>baseIps()*(boosted()?2:1);
 
 /* ---------------- улучшения ---------------- */
 const upLvl=id=>(S.up&&S.up[id])||0;
 const incMult=()=>1+.15*upLvl("inc");
 const offRate=()=>OFFLINE_RATE*(1+.25*upLvl("off"));
-const shinyChance=()=>1-Math.pow(.94,1+.12*upLvl("shiny"));
+/* Асимптота: до 100% не доходит никогда. Твист «Звёздной поляны» удваивает
+   показатель степени, а не саму вероятность, — потолок остаётся на месте. */
+const shinyChance=()=>1-Math.pow(.94,(1+.12*upLvl("shiny"))*rTw("shiny",2));
 const UPS=[
  {id:"inc",  nk:"upIncN", dk:"upIncD", base:300, k:2.1},
  {id:"off",  nk:"upOffN", dk:"upOffD", base:500, k:2.3},
@@ -420,10 +577,80 @@ const UPS=[
 ];
 const upCost=u=>Math.ceil(u.base*Math.pow(u.k,upLvl(u.id)));
 
+/* ============================================================
+   МАРШРУТ — дальний горизонт (playermotivation.md)
+   Шесть мест на лугу. У каждого свой чек-лист из трёх пунктов разного типа
+   (собрать / достичь / сделать), своя палитра и ровно одно новое правило.
+   Переезд ничего не отнимает: котики, улучшения и монетки едут с игроком, а
+   пройденные места продолжают приносить доход фоном (routeMult).
+   ============================================================ */
+const ROUTE=[
+ {k:"r1",tw:null,   breeds:5, shin:4,  lvl:4,  act:"merge",n:8,
+  pal:{sky:["#C9E3BC","#F1EEC7"],hf:"#9CC178",hn:"#8AB668",mw:["#A9CB74","#93B961"],sun:"#FFE9A4"}},
+ {k:"r2",tw:"decor",breeds:9, shin:9, lvl:8,  act:"decor",n:2,
+  pal:{sky:["#D8ECC4","#FBF3CE"],hf:"#A9CC84",hn:"#93BE6F",mw:["#B6D47F","#9DC268"],sun:"#FFEDB0"}},
+ {k:"r3",tw:"sleep",breeds:13,shin:15, lvl:12, act:"pet",  n:60,
+  pal:{sky:["#BFDEC2","#E4EDCD"],hf:"#7FAE6D",hn:"#6E9C5D",mw:["#93B96B","#7FA458"],sun:"#F3E3A8"}},
+ {k:"r4",tw:"chat", breeds:18,shin:22, lvl:17, act:"chat", n:12,
+  pal:{sky:["#BFE0E8","#E2F0DC"],hf:"#86B98F",hn:"#74A67C",mw:["#9BC48A","#85AE72"],sun:"#EAF0BC"}},
+ {k:"r5",tw:"pet",  breeds:24,shin:30, lvl:23, act:"chest",n:2,
+  pal:{sky:["#F6CFA4","#FBE7C0"],hf:"#B39A6E",hn:"#9E855C",mw:["#B7A96B","#9E9057"],sun:"#FFCE86"}},
+ {k:"r6",tw:"shiny",breeds:30,shin:40, lvl:29, act:"merge",n:40,
+  pal:{sky:["#9FA8D8","#C8C2E4"],hf:"#7E86B0",hn:"#6C739A",mw:["#8D93BE","#787EA6"],sun:"#FFF6D8"}},
+];
+const routeIdx=()=>clamp(S.route|0,0,ROUTE.length-1);
+const routeStop=()=>ROUTE[routeIdx()];
+const PAL=()=>routeStop().pal;
+/* Пройденный путь приносит фоном — это и есть «прошлая остановка остаётся
+   работать». Считается и от круга, поэтому псевдофинал не обнуляет прогресс. */
+const routeMult=()=>1+.08*((S.route|0)+(S.loop|0)*ROUTE.length);
+/* Твист остановки включается, когда игрок на неё приехал, и больше не гаснет.
+   На втором круге все правила уже с собой. */
+const hasTw=name=>(S.loop|0)>0||ROUTE.some((s,i)=>i<=routeIdx()&&s.tw===name);
+const rTw=(name,mult)=>hasTw(name)?mult:1;
+const seenBreeds=()=>Object.keys(S.album||{}).length;
+/* На первом круге «собрать» — это породы. Дальше пород больше нет, поэтому
+   осью становятся сияющие котики, НАЙДЕННЫЕ за текущий круг (S.rshin, он
+   обнуляется на финале). Альбомный счётчик тут не годится: игрок, собравший
+   всех сияющих, приехал бы на остановку с уже закрытым пунктом. */
+const rCollectGoal=()=>{const st=routeStop();return (S.loop|0)>0?st.shin:st.breeds};
+const rCollectNow=()=>(S.loop|0)>0?(S.rshin|0):seenBreeds();
+/* Первый круг меряем породами, дальше — от дохода, который был у игрока на
+   старте круга: абсолютные числа из таблицы к этому моменту уже ничего не
+   значат (idle-economy-balance §3). */
+const rIpsGoal=()=>(S.loop|0)>0
+  ? Math.ceil(Math.max(1,S.loopIps||1)*Math.pow(1.6,routeIdx()+1))
+  : Math.ceil(inc(routeStop().lvl)*3);
+const rActGoal=()=>routeStop().n;
+function rGoals(){
+  const st=routeStop();
+  return [
+    {id:"collect",txt:T((S.loop|0)>0?"rGoalShiny":"rGoalBreeds",fmt(rCollectGoal())),
+     now:rCollectNow(),goal:rCollectGoal()},
+    {id:"ips",txt:T("rGoalIps",fmt(rIpsGoal())),now:baseIps(),goal:rIpsGoal()},
+    {id:"act",txt:T("rGoal"+st.act[0].toUpperCase()+st.act.slice(1),rActGoal()),
+     now:S.ract|0,goal:rActGoal()},
+  ];
+}
+const rReady=()=>rGoals().every(g=>g.now>=g.goal);
+/* Счётчик «сделать»-пункта. Ничего не считаем в офлайне: иначе автоматика
+   закрывала бы пункты сама, пока игрока нет. */
+function rAct(type,amt){
+  if(!booted||catchUp)return;
+  if(routeStop().act!==type)return;
+  const before=S.ract|0;
+  S.ract=Math.min(rActGoal(),before+(amt||1));
+  if(S.ract!==before)routeHud();
+}
+
 /* ---------------- сохранение ---------------- */
-let ysdk=null,player=null,saveT=0,booted=false;
-function persist(force){
-  if(!booted)return;
+let ysdk=null,player=null,saveT=0,booted=false,flushT=0;
+/* Взводится на время доводки состояния при загрузке (перемотка маршрута для
+   старого сейва). Пока он поднят, ни счётчики целей, ни сохранение не
+   срабатывают: иначе миграция выдала бы награды за прошлое. */
+let catchUp=false;
+function persist(force,flush){
+  if(!booted||catchUp)return;
   const now=Date.now();
   if(!force&&now-saveT<10000)return;
   saveT=now;
@@ -432,8 +659,17 @@ function persist(force){
   S.last=now;
   const d=JSON.stringify(S);
   try{localStorage.setItem("murlug",d)}catch(e){}
-  if(player){try{player.setData({save:d})}catch(e){}}
+  /* flush:false копит запись и шлёт пачкой — это бережёт лимит площадки
+     (100 запросов за 5 минут). Но накопленное может не успеть уйти, когда
+     игрок закрывает вкладку, поэтому при уходе со страницы дожимаем явно.
+     Сам дожим троттлим, иначе дёрганое переключение вкладок сожжёт лимит. */
+  if(player){try{
+    if(flush){if(now-flushT<3000)return;flushT=now;player.setData({save:d},true)}
+    else player.setData({save:d});
+  }catch(e){}}
 }
+function saveNow(){persist(true,true)}
+addEventListener("pagehide",saveNow);
 function restore(raw){
   try{const d=JSON.parse(raw);
     if(d&&Array.isArray(d.cats)){
@@ -441,6 +677,11 @@ function restore(raw){
       S.decor=S.decor||[];S.album=S.album||{};
       S.quests=S.quests||{d:"",list:[],chest:false};
       S.up=Object.assign({inc:0,off:0,shiny:0},S.up||{});
+      /* Поля появились позже самой игры — достраиваем, иначе первое же
+         обращение уронит игру ровно у тех, кто играл до обновления. */
+      if(!S.tips||typeof S.tips!=="object")S.tips={};
+      for(const k of ["route","ract","rseen","loop","rshin","sc","rated"])S[k]=S[k]|0;
+      S.loopIps=+S.loopIps||0;
       return true}
   }catch(e){}
   return false;
@@ -454,7 +695,11 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
 function fmt(n){
   if(n<1000)return Math.floor(n)+"";
-  const u=lang==="en"?["K","M","B","T","Qa"]:["К","М","Б","Т","Кв"];let i=-1;
+  /* Список длиннее видимого предела: на поздней игре доход упирается в
+     точность Number раньше, чем кончатся суффиксы, и «1000000Кв» на экране
+     не появится. */
+  const u=lang==="en"?["K","M","B","T","Qa","Qi","Sx","Sp","Oc"]
+                     :["К","М","Б","Т","Кв","Кн","Ск","Сп","Ок"];let i=-1;
   while(n>=1000&&i<u.length-1){n/=1000;i++}
   return(n>=100?Math.floor(n):+n.toFixed(1))+u[i];
 }
@@ -640,7 +885,7 @@ function think(c,dt){
       if(c.spot)c.spot.wob=Math.sin(c.t*9)*1;
       if(Math.random()<dt*.5)say(c,Math.random()<.5?"note":"paw",1.1);
       if(c.stTimer<=0){
-        const g=catInc(c)*8*(boosted()?2:1);
+        const g=catInc(c)*8*(boosted()?2:1)*rTw("decor",1.5);
         S.coins+=g;floatTxt(c.x,c.y-52*catSize(c),"+"+fmt(g),"#DE962A");
         heartsAt(c.x,c.y-40*catSize(c),3);pop(620,.06);
         if(c.spot)c.spot.wob=0;
@@ -650,7 +895,7 @@ function think(c,dt){
     case "watch":{
       if(Math.random()<dt*.35)say(c,"fish",1.2);
       if(Math.random()<dt*.13&&c.spot){       // поймал рыбку!
-        const g=catInc(c)*15*(boosted()?2:1);
+        const g=catInc(c)*15*(boosted()?2:1)*rTw("sleep",2);
         S.coins+=g;
         splashAt(c.spot.x+R(-14,14),c.spot.y-6);
         floatTxt(c.x,c.y-54*catSize(c),"+"+fmt(g),"#3E85BF");
@@ -678,9 +923,9 @@ function think(c,dt){
         c.happy=m.happy=1.4;
         const mid={x:(c.x+m.x)/2,y:(c.y+m.y)/2-40*catSize(c)};
         heartsAt(mid.x,mid.y,5);
-        const g=(catInc(c)+catInc(m))*12*(boosted()?2:1);
+        const g=(catInc(c)+catInc(m))*12*(boosted()?2:1)*rTw("chat",1.5);
         S.coins+=g;floatTxt(mid.x,mid.y-10,"+"+fmt(g),"#DE962A");
-        pop(660,.06);qProg("chat",1);refreshHud();
+        pop(660,.06);qProg("chat",1);rAct("chat",1);refreshHud();
       }
       break;
     case "drag":break;
@@ -729,14 +974,15 @@ const wind=t=>Math.sin(t*0.8)*0.6+Math.sin(t*0.33)*0.4;
 
 function drawSky(t){
   // плоское пастельное небо
+  const P=PAL();
   const g=ctx.createLinearGradient(0,0,0,horizon+40);
-  g.addColorStop(0,"#C9E3BC");g.addColorStop(1,"#F1EEC7");
+  g.addColorStop(0,P.sky[0]);g.addColorStop(1,P.sky[1]);
   ctx.fillStyle=g;ctx.fillRect(-30,-30,W+60,horizon+72);
   // солнце — плоский кружок с колечком-ореолом
   const sx=W*.8,sy=H*.1;
   ctx.strokeStyle="rgba(255,238,175,.7)";ctx.lineWidth=8;
   ctx.beginPath();ctx.arc(sx,sy,33,0,7);ctx.stroke();
-  ctx.fillStyle="#FFE9A4";ctx.beginPath();ctx.arc(sx,sy,24,0,7);ctx.fill();
+  ctx.fillStyle=P.sun;ctx.beginPath();ctx.arc(sx,sy,24,0,7);ctx.fill();
   ctx.strokeStyle="rgba(91,70,54,.3)";ctx.lineWidth=2.2;
   ctx.beginPath();ctx.arc(sx,sy,24,0,7);ctx.stroke();
   // плоские мультяшные облака с контуром
@@ -770,10 +1016,11 @@ function blobCloud(x,y,s){
   ctx.closePath();
 }
 function drawHills(t){
-  hill(horizon-30,"#9CC178",1.0,t*.4);
+  const P=PAL();
+  hill(horizon-30,P.hf,1.0,t*.4);
   // ёлочки на дальнем холме, как на референсе
   for(const tr of treesBg)pine(tr.x,tr.y,tr.s*2.6);
-  hill(horizon,"#8AB668",0.85,-t*.25+60);
+  hill(horizon,P.hn,0.85,-t*.25+60);
 }
 function pine(x,y,s){
   ctx.strokeStyle="rgba(91,70,54,.55)";ctx.lineWidth=1.6;ctx.lineJoin="round";
@@ -802,7 +1049,7 @@ function hill(y,col,amp,off){
 function drawMeadow(t){
   // плоский оливково-зелёный луг
   const g=ctx.createLinearGradient(0,fieldTop-40,0,H);
-  g.addColorStop(0,"#A9CB74");g.addColorStop(1,"#93B961");
+  g.addColorStop(0,PAL().mw[0]);g.addColorStop(1,PAL().mw[1]);
   ctx.fillStyle=g;ctx.fillRect(-30,fieldTop-34,W+60,H+64);
   // тропинка с чернильным контуром
   ctx.fillStyle="#E2CB93";
@@ -1658,13 +1905,13 @@ function releaseCat(c){
   refreshHud();persist(true);
 }
 function petCat(c,x,y){
-  const g=catInc(c)*3*(boosted()?2:1);
+  const g=catInc(c)*3*(boosted()?2:1)*rTw("pet",2);
   S.coins+=g;c.happy=1.2;
   pop(430+c.lvl*26,.08);
   heartsAt(c.x,c.y-40*catSize(c),2);
   floatTxt(c.x,c.y-52*catSize(c),"+"+fmt(g));
   flyCoin(x,y);
-  qProg("pet",1);
+  qProg("pet",1);rAct("pet",1);
   refreshHud();
 }
 function doMerge(a,b){
@@ -1680,7 +1927,8 @@ function doMerge(a,b){
   if(sh){burst(nc.x,nc.y-30,["#FFE06E","#FFF3C2","#fff"],14,150);chime();
     toast(T("shinyToast"))}
   albumRecord(lvl,sh);
-  qProg("merge",1);
+  qProg("merge",1);rAct("merge",1);
+  if(sh&&!catchUp){S.rshin=(S.rshin|0)+1;routeHud()}
   if(lvl>S.best){S.best=lvl;discover(lvl,sh)}
   refreshHud();persist(true);
 }
@@ -1791,6 +2039,7 @@ function buyDecor(id){
   decor.push(inst);
   chime();burst(inst.x,inst.y-16,["#FFD983","#fff","#BFE3C8"],14,150);
   toast(T("decorPlaced",decName(def)));
+  rAct("decor",1);
   refreshHud();renderShop();persist(true);
 }
 
@@ -1800,7 +2049,7 @@ const QPOOL=[
  {t:"pet",  tk:"qPet",  goal:()=>15},
  {t:"buy",  tk:"qBuy",  goal:()=>3},
  {t:"chat", tk:"qChat", goal:()=>2},
- {t:"earn", tk:"qEarn", goal:()=>Math.max(600,Math.floor(totalIps()*420))},
+ {t:"earn", tk:"qEarn", goal:()=>Math.max(600,Math.floor(baseIps()*420))},
 ];
 function ensureQuests(){
   const today=new Date().toDateString();
@@ -1815,8 +2064,11 @@ function ensureQuests(){
   }
 }
 function qtxt(q){const d=QPOOL.find(p=>p.t===q.t);return T(d.tk,q.t==="earn"?fmt(q.goal):q.goal)}
-function qReward(){return Math.max(120,Math.floor(totalIps()*160))}
-function chestReward(){return Math.max(600,Math.floor(totalIps()*900))}
+/* От baseIps, а не от totalIps: бустер ×2 за ролик — временный множитель и не
+   должен протекать в награды, иначе схема «включить бустер → сразу забрать
+   всё» удваивает квесты, сундук и ежедневку. */
+function qReward(){return Math.max(120,Math.floor(baseIps()*160))}
+function chestReward(){return Math.max(600,Math.floor(baseIps()*900))}
 function qProg(type,amt){
   ensureQuests();
   let changed=false;
@@ -1840,9 +2092,14 @@ function renderQuests(){
   for(let i=0;i<S.quests.list.length;i++){
     const q=S.quests.list[i];
     const pct=Math.floor(q.prog/q.goal*100);
+    /* Смена задания за ролик — слот без кулдауна, упирается только в желание
+       игрока; заодно снимает «стену» из неудобного квеста. */
+    const swap=q.done?"":`<button class="qbtn" data-swap="${i}" title="${T("rerollTitle")}"
+        style="background:#85B8E8;padding:8px 9px">↻</button>`;
     html+=`<div class="qrow"><div class="qi">
         <div class="qt">${qtxt(q)}</div>
         <div class="qbar"><i style="width:${pct}%"></i></div></div>
+      ${swap}
       <button class="qbtn" data-claim="${i}" ${q.done&&!q.claimed?"":"disabled"}>
         ${q.claimed?T("claimed"):"+"+fmt(qReward())}</button></div>`;
   }
@@ -1861,20 +2118,54 @@ function renderQuests(){
       chime();refreshHud();renderQuests();qBadge();persist(true);
     };
   });
+  $("questBody").querySelectorAll("[data-swap]").forEach(b=>{
+    b.onclick=()=>{
+      const i=+b.dataset.swap,q=S.quests.list[i];
+      if(!q||q.done)return;
+      const used=S.quests.list.map(x=>x.t);
+      const pool=QPOOL.filter(p=>used.indexOf(p.t)<0);
+      if(!pool.length){toast(T("rerollNone"));return}
+      adOffer(`<svg width="76" height="76" viewBox="0 0 76 76" style="display:block;margin:0 auto">
+          <circle cx="38" cy="38" r="34" fill="#E4F0FA"/>
+          <path d="M38 22a16 16 0 1 1-14 8" stroke="#5E9FDE" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <path d="M38 14v10l-8-5z" fill="#5E9FDE"/></svg>`,
+        T("adRewardReroll",qtxt(q)),
+        ()=>showRewarded(()=>{
+          const d=pool[RI(0,pool.length-1)];
+          S.quests.list[i]={t:d.t,goal:d.goal(),prog:0,done:false,claimed:false};
+          toast(T("rerollDone"));qBadge();persist(true);
+          if($("questSheet").classList.contains("show"))renderQuests();
+        }));
+    };
+  });
   const cb=$("chestBtn");
   if(cb)cb.onclick=()=>{
     if(S.quests.chest)return;
     if(!S.quests.list.every(q=>q.claimed))return;
-    S.quests.chest=true;
     const g=chestReward();
-    S.coins+=g;
-    burst(W/2,H*.4,["#FFD983","#FFC2CF","#BFE3C8","#fff"],26,220);
-    chime();
-    let bonus="";
-    if(cats.length<CAT_CAP){spawnWalkIn(Math.max(1,S.best-3));bonus=T("chestBonusCat")}
-    toast(T("chestToast",fmt(g),bonus));
-    refreshHud();renderQuests();qBadge();persist(true);
+    /* Сундук уже открыт игроком — ролик только удваивает; отказ отдаёт
+       обычную награду целиком. */
+    adOffer(`<svg width="76" height="76" viewBox="0 0 76 76" style="display:block;margin:0 auto">
+        <rect x="12" y="32" width="52" height="30" rx="5" fill="#E8B84B"/>
+        <path d="M12 36a26 14 0 0 1 52 0z" fill="#F2CB6B"/>
+        <rect x="34" y="32" width="8" height="30" fill="#8A6A4C"/></svg>`,
+      T("adRewardChest",fmt(g),fmt(g*2)),
+      ()=>showRewarded(()=>openChest(g*2)),
+      ()=>openChest(g));
   };
+}
+function openChest(g){
+  if(S.quests.chest)return;
+  S.quests.chest=true;
+  S.coins+=g;
+  burst(W/2,H*.4,["#FFD983","#FFC2CF","#BFE3C8","#fff"],26,220);
+  chime();
+  let bonus="";
+  if(cats.length<CAT_CAP){spawnWalkIn(Math.max(1,S.best-3));bonus=T("chestBonusCat")}
+  toast(T("chestToast",fmt(g),bonus));
+  rAct("chest",1);
+  refreshHud();qBadge();persist(true);
+  if($("questSheet").classList.contains("show"))renderQuests();
 }
 
 /* ---------------- панели ---------------- */
@@ -1894,6 +2185,40 @@ document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>hideSheets())
 function renderSettings(){
   $("langRu").classList.toggle("on",lang==="ru");
   $("langEn").classList.toggle("on",lang==="en");
+  /* Ярлык и оценка доступны только внутри площадки — вне её блок пустой,
+     а не серая заглушка. */
+  const canSc=!!(ysdk&&ysdk.shortcut),canRate=!!(ysdk&&ysdk.feedback);
+  $("extrasBox").innerHTML=(canSc||canRate)?
+    `<div style="font-weight:900;font-size:14px;margin:12px 2px 10px">${T("extrasTitle")}</div>
+     ${canSc?`<button class="tab" id="scBtn" style="width:100%;margin-bottom:8px">${T("scTitle")}</button>`:""}
+     ${canRate?`<button class="tab" id="rateBtn" style="width:100%">${T("rateBtn")}</button>`:""}`:"";
+  const sc=$("scBtn");
+  if(sc)sc.onclick=()=>{
+    hideSheets();
+    if(!ysdk.shortcut)return;
+    ysdk.shortcut.canShowPrompt().then(r=>{
+      if(!r||!r.canShow){toast(T("scUnavailable"));return}
+      const g=Math.max(300,Math.floor(baseIps()*300));
+      ysdk.shortcut.showPrompt().then(res=>{
+        S.sc=1;
+        if(res&&res.outcome==="accepted"&&!S.scPaid){
+          S.scPaid=1;S.coins+=g;toast(T("scDone",fmt(g)));chime();refreshHud();
+        }
+        persist(true);
+      }).catch(()=>{});
+    }).catch(()=>toast(T("scUnavailable")));
+  };
+  const rt=$("rateBtn");
+  if(rt)rt.onclick=()=>{
+    hideSheets();
+    ysdk.feedback.canReview().then(c=>{
+      if(!c||!c.value){toast(T("rateUnavailable"));return}
+      return ysdk.feedback.requestReview().then(res=>{
+        S.rated=1;persist(true);
+        if(res&&res.feedbackSent)toast(T("rateThanks"));
+      });
+    }).catch(()=>toast(T("rateUnavailable")));
+  };
 }
 function setLang(l){
   if(lang===l)return;
@@ -1909,6 +2234,190 @@ function setLang(l){
 $("langRu").onclick=()=>setLang("ru");
 $("langEn").onclick=()=>setLang("en");
 
+/* ============================================================
+   МАРШРУТ: полоска в HUD, карта с туманом, переезд и псевдофинал
+   ============================================================ */
+function routeHud(){
+  const st=routeStop(),g=rGoals();
+  $("routeName").textContent=T(st.k+"n");
+  $("routeCount").textContent=T("routeOf",routeIdx()+1,ROUTE.length)
+    +((S.loop|0)>0?" · "+T("routeLoop",(S.loop|0)+1):"");
+  for(let i=0;i<3;i++){
+    const el=$("rd"+i),done=g[i].now>=g[i].goal;
+    el.classList.toggle("ok",done);
+    el.firstChild.style.width=Math.min(100,Math.round(g[i].now/g[i].goal*100))+"%";
+  }
+}
+function renderRoute(){
+  let html="";
+  for(let i=0;i<ROUTE.length;i++){
+    const st=ROUTE[i],cur=i===routeIdx(),done=i<routeIdx();
+    /* Карта с туманом: ближняя остановка названа, дальние — силуэты. Полный
+       спойлер обесценивает дорогу, полная темнота не даёт горизонта. */
+    const fogged=i>Math.max(routeIdx()+1,S.rseen|0)&&(S.loop|0)===0;
+    if(fogged){
+      html+=`<div class="rstop"><div class="rh"><div class="rnum">${i+1}</div>
+        <div class="rname rfog">${T("routeLocked")}</div></div>
+        <div class="rtw">${T("routeLockedSub")}</div></div>`;
+      continue;
+    }
+    let body="";
+    if(cur){
+      for(const g of rGoals()){
+        const ok=g.now>=g.goal;
+        body+=`<div class="ritem${ok?" ok":""}"><div class="rmark">${ok?"✓":""}</div>
+          <div class="rtxt">${g.txt}</div>
+          <div class="rval">${fmt(Math.min(g.now,g.goal))}/${fmt(g.goal)}</div></div>`;
+      }
+    }
+    html+=`<div class="rstop${cur?" now":""}${done?" done":""}">
+      <div class="rh"><div class="rnum">${done?"✓":i+1}</div>
+        <div class="rname">${T(st.k+"n")}</div>
+        ${done?`<div class="rval" style="font-size:11px;color:var(--ink-soft)">${T("routeDoneTag")}</div>`:""}</div>
+      <div class="rtw">${T(st.k+"t")}</div>${body}</div>`;
+  }
+  html+=`<div style="text-align:center;font-size:11.5px;font-weight:800;color:var(--ink-soft);padding:2px 4px 6px">
+      ${T("routeBonus",Math.round((routeMult()-1)*100))}</div>`;
+  $("routeBody").innerHTML=html;
+}
+$("routeBar").onclick=()=>{routeOpened=true;toggleSheet("routeSheet",renderRoute)};
+
+let moveOpen=false;
+function routeTryMove(){
+  if(moveOpen||!booted||catchUp)return;
+  if(!rReady())return;
+  if($("overlay").classList.contains("show"))return;   // окно возвращения и подарок важнее
+  moveOpen=true;
+  const last=routeIdx()===ROUTE.length-1;
+  const g=Math.max(500,Math.floor(baseIps()*600));
+  /* Награда за остановку — обычные монетки. Метрик прогресса, которые она
+     могла бы разогнать, в игре нет: доход считается от живых котиков. */
+  if(last){
+    S.loop=(S.loop|0)+1;S.route=0;S.ract=0;S.rseen=0;S.rshin=0;
+    S.loopIps=Math.max(1,baseIps());   // база требований следующего круга
+    S.coins+=g*3;
+    modal(`<svg width="86" height="86" viewBox="0 0 86 86" style="display:block;margin:0 auto">
+        <circle cx="43" cy="43" r="36" fill="#FFF0BD"/>
+        <path d="M43 16l7.4 17.6 19 1.6-14.4 12.5 4.3 18.6L43 56.4 26.7 66.3l4.3-18.6L16.6 35.2l19-1.6z" fill="#F2B23C"/></svg>
+      <h2>${T("routeFinTitle")}</h2>
+      <p style="text-align:left">${T("routeFinBody",ROUTE.length,(S.loop|0)+1)}</p>
+      <div class="row"><button class="mbtn main" onclick="routeMoveDone()">${T("routeFinBtn")}</button></div>`);
+  }else{
+    S.route=routeIdx()+1;S.ract=0;
+    S.rseen=Math.max(S.rseen|0,S.route+1);
+    S.coins+=g;
+    const st=routeStop();
+    modal(`<svg width="82" height="82" viewBox="0 0 82 82" style="display:block;margin:0 auto">
+        <circle cx="41" cy="41" r="34" fill="${st.pal.sky[0]}"/>
+        <path d="M7 52c9-9 16-4 24-11s14-3 21-9 14-2 23 4v28H7z" fill="${st.pal.mw[0]}"/>
+        <circle cx="58" cy="25" r="9" fill="${st.pal.sun}"/></svg>
+      <h2>${T("routeMoveTitle",T(st.k+"n"))}</h2>
+      <p style="text-align:left">${T("routeMoveBody",T(st.k+"t"),fmt(g))}</p>
+      <div class="row"><button class="mbtn main" onclick="routeMoveDone()">${T("routeMoveBtn")}</button></div>`);
+  }
+  chime();
+  burst(W/2,H*.42,["#FFD983","#BFE3C8","#C0A9F5","#fff"],28,230);
+}
+window.routeMoveDone=function(){
+  moveOpen=false;closeModal();
+  plantDecor();                       // новая палитра — пересеваем украшения
+  refreshHud();routeHud();
+  if($("routeSheet").classList.contains("show"))renderRoute();
+  persist(true);
+  /* Переезд — самое яркое событие в игре, лучшая точка для запроса оценки. */
+  setTimeout(askReview,1200);
+};
+
+/* ---------------- ярлык и оценка (инструменты площадки) ---------------- */
+function shortcutOffer(){
+  if(!ysdk||!ysdk.shortcut||S.sc)return;
+  ysdk.shortcut.canShowPrompt().then(r=>{
+    if(!r||!r.canShow)return;
+    const g=Math.max(300,Math.floor(baseIps()*300));
+    modal(`<svg width="76" height="76" viewBox="0 0 76 76" style="display:block;margin:0 auto">
+        <rect x="16" y="10" width="44" height="56" rx="8" fill="#FFF8E6" stroke="#5B4636" stroke-width="3"/>
+        <circle cx="38" cy="36" r="13" fill="#F6D488"/>
+        <path d="M28 26l3 8 5-3zM48 26l-3 8-5-3z" fill="#F6D488"/></svg>
+      <h2>${T("scTitle")}</h2><p>${T("scDesc",fmt(g))}</p>
+      <div class="row">
+        <button class="mbtn main" id="scYes">${T("scAdd")}</button>
+        <button class="mbtn ghost" id="scNo">${T("scLater")}</button>
+      </div>`);
+    /* showPrompt() открывает нативный диалог и требует жеста пользователя,
+       поэтому зовём его строго из обработчика нажатия. */
+    $("scYes").onclick=()=>{
+      closeModal();
+      ysdk.shortcut.showPrompt().then(res=>{
+        S.sc=1;persist(true);
+        if(res&&res.outcome==="accepted"){
+          S.coins+=g;toast(T("scDone",fmt(g)));chime();refreshHud();persist(true);
+        }
+      }).catch(()=>{S.sc=1;persist(true)});
+    };
+    $("scNo").onclick=()=>{closeModal();S.sc=1;persist(true)};  // отказ запоминаем
+  }).catch(()=>{});
+}
+/* ============================================================
+   КОНТЕКСТНЫЕ ПОДСКАЗКИ (idle-monetization §7)
+   Отдельная система, а не четвёртый шаг обучения: триггеры условные, а не
+   последовательные, и видеть их должны все — включая тех, кто обучение
+   прошёл давно. Условие «ещё ни разу не воспользовался», а не «не видел
+   подсказку», иначе давним игрокам подсказка выглядит глупо.
+   ============================================================ */
+const TIPS=[
+ {id:"route",target:"routeBar",txt:()=>T("tipRoute"),
+  when:()=>S.seen&&S.best>=2&&!routeOpened},
+ {id:"boost",target:"boostBtn",txt:()=>T("tipBoost"),
+  when:()=>S.seen&&S.best>=3&&!boosted()&&!S.boostUntil},
+ {id:"offline",target:"coinsChip",txt:()=>T("tipOffline"),
+  when:()=>S.seen&&cats.length>=3&&baseIps()>=8&&!S.daily.d},
+];
+let routeOpened=false,tipNow=null,tipT=0;
+function closeTip(){
+  if(!tipNow)return;
+  S.tips[tipNow.id]=1;
+  const el=$(tipNow.target);if(el)el.classList.remove("tipTarget");
+  $("tip").classList.remove("show");
+  tipNow=null;persist(true);
+}
+function showTip(tip){
+  const el=$(tip.target);if(!el)return;
+  const b=el.getBoundingClientRect(),box=$("tip");
+  box.innerHTML=tip.txt();
+  box.classList.add("show");
+  /* Ширина задана в CSS явно: при position:fixed + left браузер считает
+     ширину из остатка места справа, и у кнопки в правой части экрана текст
+     схлопнулся бы в колонку по слову. */
+  const half=box.offsetWidth/2;
+  box.style.left=clamp(b.left+b.width/2,half+10,innerWidth-half-10)+"px";
+  box.style.top=Math.max(box.offsetHeight+14,b.top-10)+"px";
+  el.classList.add("tipTarget");
+  tipNow=tip;tipT=11;
+}
+function tipTick(dt){
+  if(tipNow){if((tipT-=dt)<=0)closeTip();return}
+  if(!booted||catchUp)return;
+  if($("overlay").classList.contains("show"))return;   // окна важнее подсказки
+  if(document.querySelector(".sheet.show"))return;
+  const t=TIPS.find(x=>!S.tips[x.id]&&x.when());
+  if(t)showTip(t);
+}
+/* Любое действие игрока снимает подсказку — она уже сделала своё дело. */
+addEventListener("pointerdown",()=>{if(tipNow)closeTip()},true);
+
+let reviewAsked=false;
+function askReview(){
+  if(reviewAsked||S.rated||!ysdk||!ysdk.feedback)return;
+  reviewAsked=true;                                   // не чаще раза за сессию
+  ysdk.feedback.canReview().then(c=>{
+    if(!c||!c.value){shortcutOffer();return}           // запасной сценарий
+    return ysdk.feedback.requestReview().then(res=>{
+      S.rated=1;persist(true);
+      if(res&&res.feedbackSent)toast(T("rateThanks"));
+    });
+  }).catch(()=>{});
+}
+
 /* ---------------- HUD / экономика ---------------- */
 function refreshHud(){
   $("coins").textContent=fmt(S.coins);
@@ -1920,6 +2429,7 @@ function refreshHud(){
   $("buyBtn").classList.toggle("cant",S.coins<c);
   /* п.4.5.1: на кнопке ролика видно, какой именно котик придёт */
   $("freeTitle").textContent=T("giftCat",catName(freeCatLvl()));
+  routeHud();
 }
 $("buyBtn").onclick=()=>{
   const c=buyCost();
@@ -1944,17 +2454,30 @@ function discover(lvl,sh){
     <div class="row"><button class="mbtn main" onclick="closeModal();maybeInterstitial()">${T("discBtn")}</button></div>`);
 }
 function offlineCheck(){
-  const dt=Math.min((Date.now()-S.last)/1000,OFFLINE_CAP);
-  if(dt<60)return;
-  const base=cats.reduce((t,c)=>t+catInc(c),0);
+  const away=(Date.now()-S.last)/1000;
+  if(away<OFFLINE_MIN)return;
+  const dt=Math.min(away,OFFLINE_CAP);
+  const capped=away>OFFLINE_CAP+1;
+  const base=baseIps();
   const g=Math.floor(base*dt*offRate());
   if(g<10)return;
+  const h=Math.floor(dt/3600),m=Math.floor(dt/60)%60;
+  /* Построчно, а не одним числом: так видно отдачу от вложений в котиков и в
+     «Сонные накопления» — это прямо мотивирует их докупать. */
+  const row=(k,v)=>`<div style="display:flex;gap:8px;justify-content:space-between;align-items:baseline;
+      font-size:12.5px;font-weight:800;padding:3px 0"><span style="color:var(--ink-soft)">${k}</span><b>${v}</b></div>`;
   modal(`<svg width="76" height="76" viewBox="0 0 76 76" style="display:block;margin:0 auto">
       <circle cx="38" cy="38" r="34" fill="#EFEAFB"/>
       <path d="M48 22a17 17 0 1 0 8 26 14 14 0 0 1-8-26z" fill="#8F6FE0"/>
       <circle cx="52" cy="24" r="2.4" fill="#C0A9F5"/><circle cx="58" cy="34" r="1.7" fill="#C0A9F5"/></svg>
     <h2>${T("offTitle")}</h2>
-    <p>${T("offBody",fmt(g))}</p>
+    <p style="margin-bottom:10px">${T("offAway",T("offHours",h,m))}</p>
+    <div style="text-align:left;border-top:2px dashed #E0CFA8;border-bottom:2px dashed #E0CFA8;margin-bottom:12px;padding:5px 0">
+      ${row(T("offRowCats"),cats.length)}
+      ${row(T("offRowRate"),"+"+fmt(base*offRate())+T("perSec"))}
+      ${row(T("offRowTotal"),"+"+fmt(g))}
+    </div>
+    ${capped?`<p style="font-size:11.5px;margin-bottom:12px">${T("offCapped",OFFLINE_CAP/3600)}</p>`:""}
     <div class="row">
       <button class="mbtn main" onclick="claimOff(${g},1)">${T("claim")} +${fmt(g)}</button>
       <button class="mbtn adx" onclick="claimOff(${g},2)">
@@ -1966,12 +2489,16 @@ window.claimOff=function(g,m){
   else{S.coins+=g;closeModal();refreshHud();persist(true)}
 };
 function dailyCheck(){
+  /* Новичку окно «День 1 подряд» не показываем: оно выглядит абсурдно на
+     самом первом запуске и перекрывает обучение. Серия стартует со второго
+     захода — день при этом не «съедается», выходим до изменения streak. */
+  if(!S.seen)return;
   const today=new Date().toDateString();
   if(S.daily.d===today)return;
   const yest=new Date(Date.now()-864e5).toDateString();
   S.daily.streak=(S.daily.d===yest)?Math.min(S.daily.streak+1,7):1;
   S.daily.d=today;
-  const g=Math.max(50,Math.floor(totalIps()*60))*S.daily.streak;
+  const g=Math.max(50,Math.floor(baseIps()*60))*S.daily.streak;
   modal(`<svg width="76" height="76" viewBox="0 0 76 76" style="display:block;margin:0 auto">
       <rect x="14" y="30" width="48" height="34" rx="6" fill="#F49E7C"/>
       <rect x="10" y="22" width="56" height="14" rx="5" fill="#FF8A6B"/>
@@ -1979,42 +2506,91 @@ function dailyCheck(){
       <circle cx="38" cy="20" r="6" fill="#FFE06E"/></svg>
     <h2>${T("dailyTitle")}</h2>
     <p>${T("dailyBody",S.daily.streak,fmt(g))}</p>
-    <div class="row"><button class="mbtn main" onclick="S.coins+=${g};closeModal();refreshHud();persist(true)">${T("claim")} +${fmt(g)}</button></div>`);
+    <div class="row">
+      <button class="mbtn main" onclick="claimDaily(${g},1)">${T("claim")} +${fmt(g)}</button>
+      <button class="mbtn adx" onclick="claimDaily(${g},2)">
+        <svg width="15" height="15" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/><path d="M10 9v6l6-3z" fill="#5E9FDE"/></svg>+${fmt(g*2)}</button>
+    </div>`);
 }
+/* Кнопка «×2 за ролик» рядом с «Забрать»: игрок уже открыл окно и уже
+   настроен получать — один из самых конверсионных слотов. */
+window.claimDaily=function(g,m){
+  closeModal();
+  if(m===2)adOffer(dailyPic(),T("adRewardDaily",fmt(g),fmt(g*2)),
+    ()=>showRewarded(()=>{S.coins+=g*2;toast("+"+fmt(g*2)+" "+T("coinsWord"));chime();refreshHud();persist(true)}),
+    ()=>{S.coins+=g;refreshHud();persist(true)});
+  else{S.coins+=g;refreshHud();persist(true)}
+};
+const dailyPic=()=>`<svg width="76" height="76" viewBox="0 0 76 76" style="display:block;margin:0 auto">
+    <rect x="14" y="30" width="48" height="34" rx="6" fill="#F49E7C"/>
+    <rect x="10" y="22" width="56" height="14" rx="5" fill="#FF8A6B"/>
+    <rect x="34" y="22" width="8" height="42" fill="#FFE06E"/>
+    <circle cx="38" cy="20" r="6" fill="#FFE06E"/></svg>`;
 
 /* ---------------- Яндекс SDK ---------------- */
-let lastInter=0;
+const AD_GAP=210000, AD_RETRY=45000, AD_WARMUP=90000;
+/* Отсчёт стартует с прогрева: первые полторы минуты сессии игрока не
+   встречает реклама. Дальше сюда же пишется пауза после показа. */
+let nextAdAt=Date.now()+AD_WARMUP, adBusy=false;
+/* Площадка сама решает, показывать ли межстраничную, и просит не звать её во
+   время активной игры: случайные клики по рекламе считаются фродом. Поэтому
+   проверяем всё разом, а не только свою паузу. */
+function adAllowed(){
+  if(!ysdk||!ysdk.adv||!ysdk.adv.showFullscreenAdv)return false;
+  if(!booted||adBusy||adOn)return false;
+  if(document.hidden)return false;
+  if(Date.now()<nextAdAt)return false;              // прогрев и пауза после показа
+  if($("overlay").classList.contains("show"))return false;
+  if(document.querySelector(".sheet.show"))return false;
+  if(boosted())return false;                        // не рвём оплаченный роликом бонус
+  return true;
+}
 function maybeInterstitial(){
-  if(!ysdk)return;
-  if(Date.now()-lastInter<180000)return;
-  lastInter=Date.now();
+  if(!adAllowed())return;
+  adBusy=true;
+  /* Паузу отсчитываем от ФАКТА показа, а не от попытки: если площадка показ
+     не отдала (wasShown:false), возвращаемся раньше — этот вызов был
+     бесплатным по времени. */
+  const finish=wasShown=>{
+    adBusy=false;adResume();
+    nextAdAt=Date.now()+(wasShown?AD_GAP:AD_RETRY);
+  };
   try{ysdk.adv.showFullscreenAdv({callbacks:{
     onOpen:adPause,
-    onClose:adResume,
-    onError:adResume
-  }})}catch(e){adResume()}
+    onClose:was=>finish(!!was),
+    onError:()=>finish(false)
+  }})}catch(e){finish(false)}
 }
 window.maybeInterstitial=maybeInterstitial;
 function showRewarded(onReward){
-  if(!ysdk){onReward();return}
+  if(!ysdk||!ysdk.adv||!ysdk.adv.showRewardedVideo){onReward();return}
+  /* onError может прийти ПОСЛЕ onRewarded — без этого флага награда
+     выдалась бы дважды. Дубликат реальный, а не теоретический. */
+  let paid=false;
+  const pay=()=>{if(!paid){paid=true;onReward()}};
+  adBusy=true;
+  const done=()=>{adBusy=false;adResume()};
   try{ysdk.adv.showRewardedVideo({callbacks:{
     onOpen:adPause,
-    onRewarded:onReward,
-    onClose:adResume,
-    onError:()=>{adResume();toast(T("adFail"))}
-  }})}catch(e){adResume();onReward()}
+    onRewarded:pay,
+    onClose:done,
+    onError:()=>{done();if(!paid)toast(T("adFail"))}
+  }})}catch(e){done();pay()}
 }
 /* п.4.5.1: сначала показываем, что именно дадут, и только потом ролик */
-function adOffer(pic,body,onYes){
+function adOffer(pic,body,onYes,onNo){
   modal(`${pic}
     <h2>${T("adConfirm")}</h2>
     <p>${body}</p>
     <div class="row">
       <button class="mbtn adx" id="adYes">
         <svg width="15" height="15" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/><path d="M10 9v6l6-3z" fill="#5E9FDE"/></svg>${T("adWatch")}</button>
-      <button class="mbtn ghost" onclick="closeModal()">${T("adCancel")}</button>
+      <button class="mbtn ghost" id="adNo">${T("adCancel")}</button>
     </div>`);
   $("adYes").onclick=()=>{closeModal();onYes()};
+  /* Отказ никогда не должен стоить игроку базовой награды: слот предлагает,
+     а не требует. onNo возвращает то, что и так причиталось. */
+  $("adNo").onclick=()=>{closeModal();if(onNo)onNo()};
 }
 const freeCatLvl=()=>Math.max(1,S.best-3);
 $("freeBtn").onclick=()=>{
@@ -2164,9 +2740,13 @@ function frame(now,manual){
 }
 
 setInterval(()=>persist(),10000);
+/* Раз в секунду: очередь подсказок и проверка, не закрылся ли чек-лист
+   остановки. Обе вещи намеренно вне frame() — они не должны срабатывать
+   при ручной прокрутке времени в автотестах. */
+setInterval(()=>{if(!booted||catchUp)return;tipTick(1);routeTryMove()},1000);
 document.addEventListener("visibilitychange",()=>{
   pageHidden=document.hidden;syncAudio();
-  if(document.hidden)persist(true);
+  if(document.hidden){closeTip();saveNow()}
 });
 
 /* ---------------- тест-хуки (для автотестов Playwright) ---------------- */
@@ -2177,7 +2757,10 @@ window.render_game_to_text=()=>JSON.stringify({
   up:S.up,
   cats:cats.map(c=>({lvl:c.lvl,sh:!!c.sh,x:Math.round(c.x),y:Math.round(c.y),state:c.state})),
   decor:decor.map(d=>({id:d.id,x:Math.round(d.x),y:Math.round(d.y)})),
-  quests:(S.quests.list||[]).map(q=>({t:q.t,prog:q.prog,goal:q.goal,done:q.done,claimed:q.claimed}))
+  quests:(S.quests.list||[]).map(q=>({t:q.t,prog:q.prog,goal:q.goal,done:q.done,claimed:q.claimed})),
+  route:{stop:routeIdx()+1,of:ROUTE.length,loop:S.loop|0,mult:+routeMult().toFixed(2),
+         goals:rGoals().map(g=>({txt:g.txt,now:Math.floor(g.now),goal:g.goal,ok:g.now>=g.goal})),
+         ready:rReady()}
 });
 window.advanceTime=ms=>{
   const steps=Math.max(1,Math.round(ms/16.7));
@@ -2210,6 +2793,8 @@ function applyStaticI18n(){
   $("boostTitle").textContent=T("boostBtn");
   $("boostSub").textContent=T("boostMin");
   $("loaderText").textContent=T("loading");
+  $("routeTitle").textContent=T("routeTitle");
+  if(booted)routeHud();
 }
 /* п.1.19: GameReady сообщаем ровно в тот момент, когда игра готова принимать
    действия игрока — не раньше. Флаг взводим только после реального вызова,
@@ -2228,10 +2813,30 @@ function hideLoader(){
   el.classList.add("hide");
   setTimeout(()=>{el.style.display="none"},400);
 }
+/* Старый сейв не знает про маршрут. Вычисляем остановку из уже достигнутого
+   и проматываем пройденное БЕЗ выплат: иначе действующий игрок при первом же
+   запуске получил бы пачку наград за прошлое и проскочил полмаршрута. */
+function routeMigrate(){
+  if(S.rMig)return;
+  S.rMig=1;
+  catchUp=true;
+  try{
+    const ips0=baseIps();          // снимок до сдвига: routeMult зависит от S.route
+    let i=0;
+    while(i<ROUTE.length-1&&seenBreeds()>=ROUTE[i].breeds&&ips0>=inc(ROUTE[i].lvl)*3)i++;
+    S.route=clamp(i,0,ROUTE.length-1);
+    S.ract=0;
+    S.rseen=Math.max(S.rseen|0,S.route+1);
+  }finally{catchUp=false}
+}
 function boot(raw){
   if(booted)return;booted=true;
   if(raw)restore(raw);
-  lang=S.lang||detectLang();
+  /* Язык платформы читаем безусловно: короткое замыкание `S.lang || …`
+     оставляло ysdk.environment.i18n.lang нетронутым у всех, кто хоть раз
+     выбрал язык руками, и панель площадки показывала «I18N is not used». */
+  const platformLang=detectLang();
+  lang=S.lang||platformLang;
   applyStaticI18n();
   cats=[];decor=[];
   for(const cd of (S.cats||[]))makeCat(cd.l,clamp(cd.x,26,W-26),clamp(cd.y,fieldTop+14,fieldBot),cd.sh);
@@ -2240,11 +2845,14 @@ function boot(raw){
     makeCat(1,W*.62,fieldTop+(fieldBot-fieldTop)*.62)}
   albumRecord(1,false);
   for(const c of cats)albumRecord(c.lvl,c.sh);
+  routeMigrate();
   ensureQuests();qBadge();
   refreshHud();
   offlineCheck();
   setTimeout(dailyCheck,700);
   if(!S.seen){setTimeout(tutorial,900)}
+  /* Ярлык предлагаем втянувшемуся игроку и ровно один раз: отказ запомнен. */
+  if(S.best>=4&&!S.sc)setTimeout(shortcutOffer,60000);
   requestAnimationFrame(frame);
   /* всё построено и отрисовано — только теперь игра доступна для действий:
      сообщаем GameReady и снимаем экран загрузки (п.1.19) */
@@ -2279,11 +2887,11 @@ function tutorial(){
   if(window.YaGames){
     YaGames.init().then(sdk=>{
       ysdk=sdk;
-      /* локаль платформы точнее браузерной — уточняем, пока висит загрузка */
-      if(!savedLang){
-        const l=detectLang();
-        if(l!==lang){lang=l;applyStaticI18n();if(booted)refreshHud()}
-      }
+      /* Локаль платформы читаем ВСЕГДА, даже когда язык уже выбран руками:
+         площадка засчитывает автоопределение по факту обращения к
+         ysdk.environment.i18n.lang. Оверрайд игрока применяем после. */
+      const platform=detectLang();
+      if(!savedLang&&platform!==lang){lang=platform;applyStaticI18n();if(booted)refreshHud()}
       signalReady();
       return sdk.getPlayer({scopes:false}).then(p=>{player=p;return p.getData(["save"])})
         .then(d=>boot(d&&d.save?d.save:localRaw))
