@@ -136,10 +136,10 @@ Relaxing meadow vibes, a soft hand-drawn art style, and dozens of cats living th
 | `cover.png` | 800×470 | Обложка RU — надпись «Мур-Луг» |
 | `cover-en.png` | 800×470 | Обложка EN — надпись «Purr Meadow» |
 | `icon.png` | 512×512 | Иконка игры |
-| `d1-gameplay-ru.png`, `d2-quests-ru.png`, `d3-shop-decor-ru.png`, `d4-shop-upgrades-ru.png`, `d5-album-ru.png`, `d6-settings-ru.png` | 1920×1080 | Десктопные скриншоты **RU** (альбомные) |
-| `d1-gameplay-en.png`, `d2-quests-en.png`, `d3-shop-decor-en.png`, `d4-shop-upgrades-en.png`, `d5-album-en.png`, `d6-settings-en.png` | 1920×1080 | Десктопные скриншоты **EN** (альбомные) |
-| `s1-gameplay-ru.png`, `s2-quests-ru.png`, `s3-shop-decor-ru.png`, `s4-shop-upgrades-ru.png`, `s5-album-ru.png`, `s6-settings-ru.png` | 900×1600 | Мобильные скриншоты **RU** (вертикальные) |
-| `s1-gameplay-en.png`, `s2-quests-en.png`, `s3-shop-decor-en.png`, `s4-shop-upgrades-en.png`, `s5-album-en.png`, `s6-settings-en.png` | 900×1600 | Мобильные скриншоты **EN** (вертикальные) |
+| `d1-gameplay-ru.png`, `d2-quests-ru.png`, `d3-shop-decor-ru.png`, `d4-shop-upgrades-ru.png`, `d5-album-ru.png`, `d6-settings-ru.png`, `d7-route-ru.png` | 1920×1080 | Десктопные скриншоты **RU** (альбомные) |
+| `d1-gameplay-en.png`, `d2-quests-en.png`, `d3-shop-decor-en.png`, `d4-shop-upgrades-en.png`, `d5-album-en.png`, `d6-settings-en.png`, `d7-route-en.png` | 1920×1080 | Десктопные скриншоты **EN** (альбомные) |
+| `s1-gameplay-ru.png`, `s2-quests-ru.png`, `s3-shop-decor-ru.png`, `s4-shop-upgrades-ru.png`, `s5-album-ru.png`, `s6-settings-ru.png`, `s7-route-ru.png` | 900×1600 | Мобильные скриншоты **RU** (вертикальные) |
+| `s1-gameplay-en.png`, `s2-quests-en.png`, `s3-shop-decor-en.png`, `s4-shop-upgrades-en.png`, `s5-album-en.png`, `s6-settings-en.png`, `s7-route-en.png` | 900×1600 | Мобильные скриншоты **EN** (вертикальные) |
 | `dev-icon-CuteSatify.png` | 512×512 | Иконка аккаунта разработчика |
 
 **Скриншоты в консоли:** тип «Десктопные», ориентация «Альбомная» — грузить `d*`-файлы. Мобильные `s*` — во вкладку «Мобильные / Вертикальная».
