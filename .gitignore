@@ -1,3 +1,6 @@
 # Claude Code tooling — не часть игры
 skills/
 .claude/
+
+# сборка для загрузки в консоль — пересобирается из index.html
+murlug-yandex.zip
