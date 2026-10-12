@@ -742,6 +742,38 @@ const cv=$("cv");let ctx=cv.getContext("2d");
 /* тот же стек шрифтов, что и у HUD: если веб-шрифт не догрузился,
    canvas обязан откатиться на системный гротеск, а не на serif по умолчанию */
 const FONT=px=>`900 ${px}px 'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif`;
+
+/* ============================================================
+   СПРАЙТЫ КОТИКОВ
+   Тело, голова, морда и окрас — готовая картинка; хвост и веки по-прежнему
+   рисует код поверх, поэтому котик не замирает. Картинки генерировались
+   намеренно БЕЗ хвоста, иначе он задваивался бы с нарисованным.
+   Нет файла — молча возвращаемся к процедурной отрисовке: игра обязана
+   работать и без папки art.
+   ============================================================ */
+const ART_H=63, ART_FOOT=5;          // высота и линия лап в координатах позы
+/* Координаты глаз найдены по самим спрайтам, доли их размера. Цвет века тоже
+   снят со спрайта: у котиков с маской вокруг глаза не основной окрас. */
+const ARTEYE={
+ 1:{x:0.5018,y:0.3768,g:0.3999,r:0.0563,c:"#F8F2DF"},
+ 2:{x:0.5009,y:0.3763,g:0.3999,r:0.0599,c:"#FBC49B"},
+ 4:{x:0.5016,y:0.3638,g:0.3932,r:0.0586,c:"#818E9B"},
+ 6:{x:0.5015,y:0.3641,g:0.3932,r:0.0586,c:"#9A85C5"}
+};
+const CATART={};
+function loadArt(){
+  const one=lvl=>new Promise(res=>{
+    if(!ARTEYE[lvl])return res();
+    const im=new Image();
+    im.onload=()=>{CATART[lvl]=im;res()};
+    im.onerror=()=>res();           // нет картинки — останется процедурный котик
+    im.src="art/cat"+lvl+".png";
+  });
+  return Promise.all(BREEDS.map((b,i)=>one(i+1)));
+}
+/* Ждать загрузку вечно нельзя: GameReady обязан уйти вовремя (п.1.19).
+   Если картинки не успели — показываем процедурных котиков и живём дальше. */
+const artLoad=Promise.race([loadArt(),new Promise(r=>setTimeout(r,3000))]);
 /* десктоп: не выделять поле и не открывать контекстное меню (треб. платформы 1.6.2.7) */
 addEventListener("contextmenu",e=>e.preventDefault());
 document.addEventListener("selectstart",e=>e.preventDefault());
@@ -1354,10 +1386,20 @@ function drawCat(c,t,gCtx,forcePose){
     const a=(Math.sin(t*3+c.ph)+1)/2;
     g.strokeStyle=`rgba(255,214,110,${.45+a*.35})`;
     g.lineWidth=3;
-    g.beginPath();g.ellipse(0,-24,24,28,0,0,7);g.stroke();
+    /* у спрайта силуэт выше и шире процедурного — ореол прежнего размера
+       перечёркивал бы его поперёк живота */
+    const im=CATART[c.lvl];
+    if(im&&!sleeping){
+      const hh=ART_H,ww=hh*im.width/im.height;
+      g.beginPath();g.ellipse(0,ART_FOOT-hh/2,ww/2+4,hh/2+4,0,0,7);g.stroke();
+    }else{
+      g.beginPath();g.ellipse(0,-24,24,28,0,0,7);g.stroke();
+    }
   }
 
-  if(sleeping)poseSleep(g,B,t,c);
+  const art=sleeping?null:CATART[c.lvl];
+  if(art)poseSitArt(g,B,t,c,walking,playing,art);
+  else if(sleeping)poseSleep(g,B,t,c);
   else poseSit(g,B,t,c,walking,playing);
 
   g.restore();
@@ -1382,6 +1424,26 @@ function drawCat(c,t,gCtx,forcePose){
       parts.push({x:c.x+R(-14,14)*s,y:c.y-R(10,40)*s,vx:R(-8,8),vy:R(-24,-10),
         life:.7,t:0,c:"#FFE06E",r:R(1.6,2.6),rot:0,vr:4,shape:1});
     if(sleeping)drawZzz(c.x+10*s*c.dir,c.y-34*s,t,c.ph);
+  }
+}
+
+/* ---- сидячая поза из спрайта: картинка + живой хвост и веки ---- */
+function poseSitArt(g,B,t,c,walking,playing,im){
+  drawTail(g,B,t,c,walking||playing||c.state==="chat",1.38);
+  const h=ART_H,w=h*im.width/im.height,x0=-w/2,y0=ART_FOOT-h;
+  g.drawImage(im,x0,y0,w,h);
+  const m=ARTEYE[c.lvl];
+  if(!m)return;
+  const happy=c.happy>0||c.state==="chat"||c.state==="play";
+  if(!(c.blink>0||happy))return;
+  /* Сначала закрываем открытый глаз цветом мордочки, иначе зрачок просвечивал
+     бы сквозь веко, и только потом рисуем дужку «^^». */
+  const ex=x0+m.x*w,ey=y0+m.y*h,gap=m.g*w/2,r=m.r*w;
+  g.fillStyle=m.c;
+  for(const sgn of [-1,1]){g.beginPath();g.arc(ex+sgn*gap,ey,r*1.18,0,7);g.fill()}
+  g.strokeStyle="#3A2B22";g.lineWidth=Math.max(1.4,r*.4);g.lineCap="round";
+  for(const sgn of [-1,1]){
+    g.beginPath();g.arc(ex+sgn*gap,ey+r*.25,r*.9,Math.PI*1.1,Math.PI*1.9);g.stroke();
   }
 }
 
@@ -1465,21 +1527,25 @@ function tailCurl(g,B){
 }
 
 /* ---- хвост (сидя): выглядывает сбоку и изгибается вверх ---- */
-function drawTail(g,B,t,c,active){
+function drawTail(g,B,t,c,active,k){
+  /* k — поправка для спрайтов: их силуэт шире процедурного тела, и хвост
+     прежнего размера выглядывал бы из-за корпуса одной культяпкой. */
+  k=k||1;
   const wag=Math.sin(t*(active?7:2.4)+c.ph)*(active?7:4);
-  const tx=22+wag*.15, ty=-20-wag*.5;
-  const path=()=>{g.beginPath();g.moveTo(8,-4);g.quadraticCurveTo(20,-2,tx,ty)};
-  path();g.strokeStyle=INK;g.lineWidth=10.4;g.stroke();
-  path();g.strokeStyle=B.body;g.lineWidth=6.8;g.stroke();
+  const x0=8*k,y0=-4*k,cx=20*k,cy=-2*k;
+  const tx=(22+wag*.15)*k, ty=(-20-wag*.5)*k;
+  const path=()=>{g.beginPath();g.moveTo(x0,y0);g.quadraticCurveTo(cx,cy,tx,ty)};
+  path();g.strokeStyle=INK;g.lineWidth=10.4*k;g.stroke();
+  path();g.strokeStyle=B.body;g.lineWidth=6.8*k;g.stroke();
   if(B.mark==="stripes"){
-    g.strokeStyle=B.accent;g.globalAlpha=.6;g.lineWidth=6.8;
-    dashOn(g,8,-4,20,-2,tx,ty,.5,.13);
-    dashOn(g,8,-4,20,-2,tx,ty,.75,.13);
+    g.strokeStyle=B.accent;g.globalAlpha=.6;g.lineWidth=6.8*k;
+    dashOn(g,x0,y0,cx,cy,tx,ty,.5,.13);
+    dashOn(g,x0,y0,cx,cy,tx,ty,.75,.13);
     g.globalAlpha=1;
   }
   const tipCol=B.mark==="socks"?"#FFF6EC":(B.mark==="mask"?B.accent:B.body);
-  g.beginPath();g.arc(tx,ty,4.6,0,7);
-  g.fillStyle=tipCol;g.fill();g.strokeStyle=INK;g.lineWidth=2;g.stroke();
+  g.beginPath();g.arc(tx,ty,4.6*k,0,7);
+  g.fillStyle=tipCol;g.fill();g.strokeStyle=INK;g.lineWidth=2*k;g.stroke();
 }
 function dashOn(g,x0,y0,cx,cy,x1,y1,u,len){
   const q=(a,b,c2,tt)=>{const m1=lerp(a,b,tt),m2=lerp(b,c2,tt);return lerp(m1,m2,tt)};
@@ -2855,9 +2921,10 @@ function boot(raw){
   if(S.best>=4&&!S.sc)setTimeout(shortcutOffer,60000);
   requestAnimationFrame(frame);
   /* всё построено и отрисовано — только теперь игра доступна для действий:
-     сообщаем GameReady и снимаем экран загрузки (п.1.19) */
-  signalReady();
-  hideLoader();
+     сообщаем GameReady и снимаем экран загрузки (п.1.19). Спрайты ждём здесь
+     же: иначе первый кадр показал бы процедурных котиков и они сменились бы
+     картинками на глазах у игрока. */
+  artLoad.then(()=>{signalReady();hideLoader()});
 }
 function tutorial(){
   if($("overlay").classList.contains("show")){setTimeout(tutorial,1500);return}
