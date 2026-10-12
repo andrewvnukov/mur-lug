@@ -761,7 +761,12 @@ const ARTEYE={
  6:{x:0.5015,y:0.3641,g:0.3932,r:0.0586,c:"#9A85C5"}
 };
 const CATART={};
+/* Набор либо полон, либо спрайтов нет вовсе. Проверяем это ДО запросов:
+   иначе на недоделанном наборе игра тянула бы файлы, которые всё равно
+   выбросит, и светила бы модератору пачкой 404 в консоли. */
+const ART_FULL=BREEDS.every((b,i)=>ARTEYE[i+1]);
 function loadArt(){
+  if(!ART_FULL)return Promise.resolve();
   const one=lvl=>new Promise(res=>{
     if(!ARTEYE[lvl])return res();
     const im=new Image();
@@ -769,7 +774,13 @@ function loadArt(){
     im.onerror=()=>res();           // нет картинки — останется процедурный котик
     im.src="art/cat"+lvl+".png";
   });
-  return Promise.all(BREEDS.map((b,i)=>one(i+1)));
+  return Promise.all(BREEDS.map((b,i)=>one(i+1))).then(()=>{
+    /* Даже при полном наборе часть файлов могла не доехать — тогда тоже
+       рисуем кодом: половина пород картинками, половина кодом заметна
+       сразу, первыми игрок видит как раз младшие породы. */
+    if(BREEDS.some((b,i)=>!CATART[i+1]))
+      for(const k of Object.keys(CATART))delete CATART[k];
+  });
 }
 /* Ждать загрузку вечно нельзя: GameReady обязан уйти вовремя (п.1.19).
    Если картинки не успели — показываем процедурных котиков и живём дальше. */
